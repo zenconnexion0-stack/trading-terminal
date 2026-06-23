@@ -345,6 +345,11 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 </div>
 
 <script>
+// ══════════════════════════════════════════════════
+// 🔑 CLÉ API OPENROUTER (gratuite)
+const API_KEY = "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";
+// ══════════════════════════════════════════════════
+
 // ══ CONFIG ACTIONS ══
 const AC={
   BUY:        {bg:"rgba(34,197,94,.15)",  bd:"#22c55e",tx:"#16a34a",lbl:"Acheter"},
@@ -458,12 +463,24 @@ const riskColor=r=>{if(r>=8)return"#ef4444";if(r>=5)return"#f59e0b";return"#22c5
 function getActiveTickers(){return(S.data&&S.data.stocks)?S.data.stocks.map(s=>s.ticker):[];}
 
 // ══ INIT ══
-window.onload=()=>{load();if(!S.key){ge("setup").style.display="flex";}else{startApp();}};
+window.onload=()=>{
+  load();
+  if(API_KEY && API_KEY.length>10){
+    S.key=API_KEY;
+    save();
+    ge("setup").style.display="none";
+    startApp();
+  } else if(S.key){
+    ge("setup").style.display="none";
+    startApp();
+  } else {
+    ge("setup").style.display="flex";
+  }
+};
 
 function saveKey(){
   const v=ge("key-input").value.trim();
-  if(!v){showApiStatus("setup-api-status","err","Entrez votre clé API Gemini");return;}
-  if(!v.startsWith("AIza")){showApiStatus("setup-api-status","err","Format invalide — doit commencer par AIzaSy...");return;}
+  if(!v){showApiStatus("setup-api-status","err","Entrez votre clé API");return;}
   S.key=v;save();ge("setup").style.display="none";startApp();
 }
 
@@ -524,26 +541,30 @@ function parseData(txt){
 
 async function callClaudeWithTools(prompt){
   if(!S.key)throw new Error("Clé API manquante");
-  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${S.key}`,{
+  const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+S.key
+    },
     body:JSON.stringify({
-      contents:[{parts:[{text:prompt}]}],
-      tools:[{google_search:{}}],
-      generationConfig:{maxOutputTokens:8000,temperature:0.1}
+      model:"mistralai/mistral-7b-instruct:free",
+      max_tokens:8000,
+      temperature:0.1,
+      messages:[{role:"user",content:prompt}]
     })
   });
   if(!res.ok){
-    const e=await res.json();
+    const e=await res.json().catch(()=>({}));
     const msg=e.error?.message||"HTTP "+res.status;
-    if(res.status===400)throw new Error("Clé API invalide. Vérifiez dans Paramètres.");
-    if(res.status===429)throw new Error("Limite de taux atteinte. Attendez 1 minute.");
-    if(res.status===403)throw new Error("Clé API invalide ou permissions insuffisantes.");
-    throw new Error(msg);
+    if(res.status===401)throw new Error("Clé API invalide (401). Vérifiez sur openrouter.ai/keys");
+    if(res.status===429)throw new Error("Limite atteinte. Attendez 1 minute.");
+    if(res.status===402)throw new Error("Crédits insuffisants sur OpenRouter.");
+    throw new Error("Erreur "+res.status+": "+msg);
   }
   const data=await res.json();
-  const txt=(data.candidates?.[0]?.content?.parts||[]).filter(p=>p.text).map(p=>p.text).join("");
-  if(!txt)throw new Error("Aucune réponse de Gemini");
+  const txt=data.choices?.[0]?.message?.content||"";
+  if(!txt)throw new Error("Aucune réponse");
   return txt;
 }
 
@@ -713,10 +734,9 @@ function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-abo
 function showSettings(){ge("cfg-overlay").classList.add("show");}
 function changeKey(){
   const v=ge("key-change").value.trim();
-  if(!v){showApiStatus("cfg-api-status","err","Entrez une clé API Gemini");return;}
-  if(!v.startsWith("AIza")){showApiStatus("cfg-api-status","err","Format invalide — doit commencer par AIzaSy...");return;}
+  if(!v){showApiStatus("cfg-api-status","err","Entrez une clé API");return;}
   S.key=v;save();
-  showApiStatus("cfg-api-status","ok","Clé Gemini enregistrée ✓");
+  showApiStatus("cfg-api-status","ok","Clé enregistrée ✓");
   setTimeout(()=>closeSheet("cfg-overlay"),1200);
 }
 function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
