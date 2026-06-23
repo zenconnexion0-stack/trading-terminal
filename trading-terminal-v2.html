@@ -528,7 +528,8 @@ body{
 
 // ── CONFIG ──────────────────────────────────────
 const API_KEY     = "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";
-const MODEL_TEXT  = "llama-3.3-70b-versatile";
+const MODEL_TEXT  = "llama-3.1-8b-instant";         // 131 072 tokens/min — 22x plus généreux
+const MODEL_HEAVY = "llama-3.3-70b-versatile";      // gardé pour analyse portef. (moins fréquent)
 const MODEL_VIS   = "meta-llama/llama-4-scout-17b-16e-instruct";
 
 // ── MAPS ─────────────────────────────────────────
@@ -725,25 +726,53 @@ function stopTick(){if(ticker){clearInterval(ticker);ticker=null;}}
 function updateCD(){const t=$("cd-txt"),f=$("cd-fill");if(t)t.textContent=fCD(S.cd);if(f)f.style.width=Math.round((S.cd/S.ivSec)*100)+"%";}
 
 // ── GROQ API ──────────────────────────────────────
-async function groq(prompt, imgBase64=null) {
+// useHeavy=true → 70b model (portef/stratégie), default = 8b instant (scan)
+async function groq(prompt, imgBase64=null, useHeavy=false) {
   if (!S.key) throw new Error("Clé API manquante");
-  const model = imgBase64 ? MODEL_VIS : MODEL_TEXT;
-  const content = imgBase64
+  const model      = imgBase64 ? MODEL_VIS : (useHeavy ? MODEL_HEAVY : MODEL_TEXT);
+  const max_tokens = imgBase64 ? 2000 : 4000; // réduit = moins de tokens consommés
+  const content    = imgBase64
     ? [{type:"image_url",image_url:{url:`data:image/jpeg;base64,${imgBase64}`}},{type:"text",text:prompt}]
     : prompt;
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},
-    body:JSON.stringify({model,max_tokens:8000,temperature:0.1,messages:[{role:"user",content}]})
+    body:JSON.stringify({model,max_tokens,temperature:0.1,messages:[{role:"user",content}]})
   });
   if (!res.ok) {
-    const e=await res.json().catch(()=>({}));
-    if(res.status===401)throw new Error("Clé API invalide — vérifiez sur console.groq.com");
-    if(res.status===429)throw new Error("Limite atteinte — attendez 1 minute");
-    throw new Error(e.error?.message||"Erreur HTTP "+res.status);
+    let detail="";
+    try{ const e=await res.json(); detail=e.error?.message||""; }catch(e){}
+    if(res.status===401) throw new Error("Clé API invalide — vérifiez sur console.groq.com");
+    if(res.status===429) {
+      const secs = parseInt(res.headers.get("retry-after")||"62");
+      throw Object.assign(new Error(`Rate limit — reprise auto dans ${secs}s`), {code:"RATELIMIT", secs, detail});
+    }
+    throw new Error(detail||"Erreur HTTP "+res.status);
   }
   const d=await res.json();
   return d.choices?.[0]?.message?.content||"";
+}
+
+// Auto-retry with live countdown on 429
+async function groqWithRetry(prompt, imgBase64=null, useHeavy=false) {
+  try {
+    return await groq(prompt, imgBase64, useHeavy);
+  } catch(e) {
+    if (e.code==="RATELIMIT") {
+      let s = (e.secs||62);
+      setSbar(`⏳ Limite Groq — reprise dans ${s}s...`, true);
+      await new Promise(resolve => {
+        const iv = setInterval(()=>{
+          s--;
+          setSbar(`⏳ Limite Groq — reprise dans ${s}s... (${e.detail||MODEL_TEXT})`, true);
+          if(s<=0){ clearInterval(iv); resolve(); }
+        },1000);
+      });
+      setSbar("Réessai en cours...");
+      return await groq(prompt, imgBase64, useHeavy); // 1 retry
+    }
+    throw e;
+  }
 }
 
 // ── JSON PARSER ───────────────────────────────────
@@ -1003,7 +1032,7 @@ async function runScan() {
   const si2=setInterval(()=>{si=(si+1)%SCAN_MSGS.length;setSbar(SCAN_MSGS[si]);},3500);
   try {
     // Step 1 — AI analysis (tickers, catalysts, scoring)
-    const txt=await groq(SCAN_PROMPT);
+    const txt=await groqWithRetry(SCAN_PROMPT);
     clearInterval(si2);
     const p=parseJ(txt);
     if(p.stocks)p.stocks.sort((a,b)=>(b.score||0)-(a.score||0));
@@ -1058,11 +1087,11 @@ async function analyzePf() {
     let positions=input;
     if(S.pfImg) {
       setSbar("Extraction des positions depuis la photo...");
-      const extracted=await groq(`Regarde cette capture d'écran de portefeuille (Trade Republic, Boursorama, etc.). Extrais TOUTES les positions visibles. Pour chaque ligne: nom, ticker, quantité, prix d'achat si visible, performance si visible. Réponds en texte simple, une ligne par position.`,S.pfImg);
+      const extracted=await groqWithRetry(`Regarde cette capture d'écran de portefeuille (Trade Republic, Boursorama, etc.). Extrais TOUTES les positions visibles. Pour chaque ligne: nom, ticker, quantité, prix d'achat si visible, performance si visible. Réponds en texte simple, une ligne par position.`,S.pfImg);
       positions=extracted+(input?"\n\nInfos supplémentaires:\n"+input:"");
       hideSbar();
     }
-    const txt=await groq(pfPrompt(positions));
+    const txt=await groqWithRetry(pfPrompt(positions),null,true);
     const pf=parseJ(txt);
 
     // Inject real prices into portfolio positions
@@ -1110,7 +1139,7 @@ async function genStrategy() {
   const btn=$("st-btn");
   btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2 spin"></i>Génération en cours...';
   try {
-    const txt=await groq(stPrompt(budget,S.stratCfg.time,S.stratCfg.risk));
+    const txt=await groqWithRetry(stPrompt(budget,S.stratCfg.time,S.stratCfg.risk),null,true);
     S.stratData=parseJ(txt);save();renderSt();
   } catch(e){alert("Erreur: "+e.message);}
   finally {
