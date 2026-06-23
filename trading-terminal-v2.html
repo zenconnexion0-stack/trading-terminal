@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Terminal IA v2">
+<meta name="apple-mobile-web-app-title" content="Terminal IA v3">
 <meta name="theme-color" content="#06090f">
-<title>Trading Terminal IA v2</title>
+<title>Trading Terminal IA v3</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
 <style>
 :root{
@@ -154,22 +154,47 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 <div id="setup" class="setup" style="display:none">
   <div class="setup-card">
     <div>
-      <div class="setup-title">⚡ TERMINAL IA v2</div>
-      <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
-        <span style="background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">5 FILTRES ANTI-PERTE</span>
-        <span style="background:rgba(249,115,22,.15);border:1px solid #f97316;color:#f97316;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PARI BINAIRE DÉTECTÉ</span>
+      <div class="setup-title">⚡ TERMINAL IA v3</div>
+      <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+        <span style="background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">5 FILTRES</span>
+        <span style="background:rgba(249,115,22,.15);border:1px solid #f97316;color:#f97316;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PARI BINAIRE</span>
         <span style="background:rgba(96,165,250,.15);border:1px solid #60a5fa;color:#60a5fa;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">AUTO-REFRESH</span>
+        <span style="background:rgba(234,179,8,.15);border:1px solid #eab308;color:#ca8a04;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">GEMINI GRATUIT</span>
       </div>
-      <div class="setup-sub" style="margin-top:10px">Analyse en temps réel avec détection automatique des risques cachés.<br>Entrez votre clé API Anthropic.</div>
+      <div class="setup-sub" style="margin-top:10px">Choisissez votre fournisseur d'IA et entrez votre clé API.</div>
     </div>
-    <div>
+
+    <!-- Provider tabs -->
+    <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:10px;overflow:hidden">
+      <button id="tab-gemini" onclick="selectProvider('gemini')" style="flex:1;padding:10px;background:rgba(234,179,8,.15);border:none;color:#ca8a04;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;border-right:1px solid var(--bd2)">
+        <i class="ti ti-brand-google" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Gemini (Gratuit)
+      </button>
+      <button id="tab-anthropic" onclick="selectProvider('anthropic')" style="flex:1;padding:10px;background:var(--bg);border:none;color:var(--t3);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer">
+        <i class="ti ti-robot" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Anthropic
+      </button>
+    </div>
+
+    <!-- Gemini section -->
+    <div id="section-gemini">
+      <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:10px;padding:10px;margin-bottom:10px">
+        <div style="font-size:11px;color:#ca8a04;font-weight:600;margin-bottom:4px"><i class="ti ti-gift" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Gemini 2.0 Flash — Gratuit</div>
+        <div style="font-size:10px;color:var(--t2);line-height:1.6">✓ 1 500 scans/jour gratuits<br>✓ Recherche Google intégrée<br>✓ Aucune carte bancaire requise</div>
+      </div>
+      <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Google AI Studio</div>
+      <input type="password" class="fi" id="gemini-key-input" placeholder="AIza..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
+      <div class="setup-note" style="margin-top:8px">Clé gratuite sur <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div>
+    </div>
+
+    <!-- Anthropic section -->
+    <div id="section-anthropic" style="display:none">
       <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Anthropic</div>
-      <input type="password" class="fi" id="key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
+      <input type="password" class="fi" id="anthropic-key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
+      <div class="setup-note" style="margin-top:8px">Clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
     </div>
+
     <button class="btn-p" onclick="saveKey()">
       <i class="ti ti-arrow-right" style="font-size:14px"></i>Accéder au terminal
     </button>
-    <div class="setup-note">Clé gratuite sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>Stockée uniquement sur cet appareil.</div>
   </div>
 </div>
 
@@ -179,7 +204,8 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
     <div class="hl">
       <div id="dot" class="dot dot-live"></div>
       <span class="htitle">TERMINAL IA</span>
-      <span class="hbadge">v2</span>
+      <span class="hbadge">v3</span>
+      <span id="provider-badge" style="background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.4);color:#ca8a04;font-size:9px;padding:1px 7px;border-radius:5px;font-weight:600;cursor:pointer" onclick="showSettings()">Gemini · 0/1500</span>
     </div>
     <div class="hr">
       <button class="hbtn" id="auto-btn" onclick="toggleAuto()">
@@ -245,6 +271,7 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
   <div class="sheet">
     <div class="handle"></div>
     <div class="stitle">Paramètres</div>
+
     <div class="home-box">
       <div style="font-size:12px;font-weight:600;color:var(--wait)"><i class="ti ti-device-mobile" style="font-size:13px;vertical-align:-1px;margin-right:5px"></i>Ajouter à l'écran d'accueil</div>
       <div class="home-steps">
@@ -254,9 +281,26 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
         Menu (⋮) → <strong style="color:var(--t1)">Ajouter à l'écran d'accueil</strong>
       </div>
     </div>
-    <div style="font-size:12px;font-weight:600;color:var(--t1)">Changer la clé API</div>
-    <div class="api-row"><input type="password" id="key-change" placeholder="sk-ant-api03-..." class="fi"></div>
-    <button class="btn-p" onclick="changeKey()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer</button>
+
+    <div style="font-size:12px;font-weight:600;color:var(--t1)">Fournisseur actif</div>
+    <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:10px;overflow:hidden">
+      <button onclick="switchProvider('gemini')" id="cfg-tab-gemini" style="flex:1;padding:10px;border:none;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">
+        <i class="ti ti-brand-google" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Gemini Gratuit
+      </button>
+      <button onclick="switchProvider('anthropic')" id="cfg-tab-anthropic" style="flex:1;padding:10px;border:none;border-left:1px solid var(--bd2);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s">
+        <i class="ti ti-robot" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Anthropic
+      </button>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--t1)">Clé Gemini (Google AI Studio)</div>
+    <div class="api-row"><input type="password" id="gemini-key-change" placeholder="AIza..." class="fi"></div>
+    <div style="font-size:10px;color:var(--t3)">1 500 scans/jour gratuits · <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--wait)">Obtenir la clé</a></div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--t1)">Clé Anthropic</div>
+    <div class="api-row"><input type="password" id="anthropic-key-change" placeholder="sk-ant-api03-..." class="fi"></div>
+    <div style="font-size:10px;color:var(--t3)"><a href="https://console.anthropic.com" target="_blank" style="color:var(--wait)">console.anthropic.com</a></div>
+
+    <button class="btn-p" onclick="saveKeys()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer les clés</button>
     <button class="btn-p" style="background:var(--bg3);color:var(--t2);border:1px solid var(--bd)" onclick="requestNotif()"><i class="ti ti-bell" style="font-size:14px"></i>Activer les notifications</button>
     <button class="close-btn" onclick="closeSheet('cfg-overlay')">Fermer</button>
   </div>
@@ -286,11 +330,42 @@ const SNRC={LOW:{c:"#22c55e",lbl:"STN faible"},MODERATE:{c:"#f59e0b",lbl:"STN mo
 const TICKERS=["MRVL","MU","INTC","ABNB","PLTR"];
 
 // ══ STATE ══
-let S={key:"",data:null,alerts:{},log:[],logOpen:false,autoOn:false,ivSec:600,cd:600,loading:false,scans:0};
+let S={
+  provider:"gemini", // "gemini" | "anthropic"
+  geminiKey:"", anthropicKey:"",
+  data:null, alerts:{}, log:[], logOpen:false,
+  autoOn:false, ivSec:600, cd:600, loading:false, scans:0,
+  dailyDate:"", dailyCount:0
+};
 
 // ══ PERSIST ══
-function save(){try{localStorage.setItem("tt2_k",S.key);localStorage.setItem("tt2_a",JSON.stringify(S.alerts));localStorage.setItem("tt2_d",JSON.stringify(S.data));localStorage.setItem("tt2_l",JSON.stringify(S.log.slice(0,50)));}catch(e){}}
-function load(){S.key=localStorage.getItem("tt2_k")||"";S.alerts=JSON.parse(localStorage.getItem("tt2_a")||"{}");const d=localStorage.getItem("tt2_d");if(d)try{S.data=JSON.parse(d);}catch(e){}S.log=JSON.parse(localStorage.getItem("tt2_l")||"[]");TICKERS.forEach(t=>{if(!S.alerts[t])S.alerts[t]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""}});}
+function save(){
+  try{
+    localStorage.setItem("tt3_prov",S.provider);
+    localStorage.setItem("tt3_gk",S.geminiKey);
+    localStorage.setItem("tt3_ak",S.anthropicKey);
+    localStorage.setItem("tt3_a",JSON.stringify(S.alerts));
+    localStorage.setItem("tt3_d",JSON.stringify(S.data));
+    localStorage.setItem("tt3_l",JSON.stringify(S.log.slice(0,50)));
+    localStorage.setItem("tt3_dd",S.dailyDate);
+    localStorage.setItem("tt3_dc",S.dailyCount);
+  }catch(e){}
+}
+function load(){
+  S.provider=localStorage.getItem("tt3_prov")||"gemini";
+  S.geminiKey=localStorage.getItem("tt3_gk")||"";
+  S.anthropicKey=localStorage.getItem("tt3_ak")||"";
+  S.alerts=JSON.parse(localStorage.getItem("tt3_a")||"{}");
+  const d=localStorage.getItem("tt3_d");if(d)try{S.data=JSON.parse(d);}catch(e){}
+  S.log=JSON.parse(localStorage.getItem("tt3_l")||"[]");
+  S.dailyDate=localStorage.getItem("tt3_dd")||"";
+  S.dailyCount=parseInt(localStorage.getItem("tt3_dc")||"0")||0;
+  const today=new Date().toDateString();
+  if(S.dailyDate!==today){S.dailyDate=today;S.dailyCount=0;}
+  TICKERS.forEach(t=>{if(!S.alerts[t])S.alerts[t]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""};});
+}
+function activeKey(){return S.provider==="gemini"?S.geminiKey:S.anthropicKey;}
+function dailyLimit(){return S.provider==="gemini"?1500:999;}
 
 // ══ SEED DATA avec filtres ══
 const DEF_FILTERS={extension:{status:"WARNING",label:"Données en cours..."},consensus:{status:"WARNING",label:"Données en cours..."},sector_precedent:{status:"WARNING",label:"AVGO −13% post-earnings"},options_iv:{status:"OK",label:"Normal"},insiders:{status:"WARNING",label:"À vérifier"}};
@@ -427,9 +502,35 @@ const stars=n=>"★".repeat(Math.min(5,n|0))+"☆".repeat(5-Math.min(5,n|0));
 const riskColor=r=>{if(r>=8)return"#ef4444";if(r>=5)return"#f59e0b";return"#22c55e";};
 
 // ══ INIT ══
-window.onload=()=>{load();if(!S.key){ge("setup").style.display="flex";}else{startApp();}};
-function saveKey(){const v=ge("key-input").value.trim();if(!v)return;S.key=v;save();ge("setup").style.display="none";startApp();}
-function startApp(){ge("app").style.display="block";renderData(S.data||SEED);renderLog();requestNotif();}
+let _setupProvider="gemini";
+function selectProvider(p){
+  _setupProvider=p;
+  const gs=ge("section-gemini"),as=ge("section-anthropic");
+  const gt=ge("tab-gemini"),at=ge("tab-anthropic");
+  if(p==="gemini"){gs.style.display="block";as.style.display="none";gt.style.background="rgba(234,179,8,.15)";gt.style.color="#ca8a04";at.style.background="var(--bg)";at.style.color="var(--t3)";}
+  else{gs.style.display="none";as.style.display="block";at.style.background="rgba(96,165,250,.15)";at.style.color="var(--wait)";gt.style.background="var(--bg)";gt.style.color="var(--t3)";}
+}
+function switchProvider(p){
+  S.provider=p;save();updateProviderUI();
+}
+function updateProviderUI(){
+  const gk=S.provider==="gemini";
+  const cg=ge("cfg-tab-gemini"),ca=ge("cfg-tab-anthropic");
+  if(!cg||!ca)return;
+  if(gk){cg.style.background="rgba(234,179,8,.15)";cg.style.color="#ca8a04";ca.style.background="var(--bg3)";ca.style.color="var(--t3)";}
+  else{ca.style.background="rgba(96,165,250,.15)";ca.style.color="var(--wait)";cg.style.background="var(--bg3)";cg.style.color="var(--t3)";}
+  const badge=ge("provider-badge");
+  if(badge)badge.textContent=gk?("Gemini · "+S.dailyCount+"/"+dailyLimit()):("Anthropic · "+S.dailyCount);
+}
+window.onload=()=>{load();if(!activeKey()){ge("setup").style.display="flex";selectProvider(S.provider);}else{startApp();}};
+function saveKey(){
+  const gv=ge("gemini-key-input").value.trim();
+  const av=ge("anthropic-key-input").value.trim();
+  if(_setupProvider==="gemini"){if(!gv)return;S.geminiKey=gv;}
+  else{if(!av)return;S.anthropicKey=av;}
+  S.provider=_setupProvider;save();ge("setup").style.display="none";startApp();
+}
+function startApp(){ge("app").style.display="block";renderData(S.data||SEED);renderLog();requestNotif();updateProviderUI();}
 
 // ══ NOTIFICATIONS & SOUND ══
 async function requestNotif(){if("Notification"in window){const p=await Notification.requestPermission();S.notifGranted=(p==="granted");}}
@@ -452,8 +553,33 @@ function updateCD(){const t=ge("cd-txt"),f=ge("cd-fill");if(t)t.textContent=fmtC
 // ══ API SCAN ══
 function parseData(txt){const t=[()=>JSON.parse(txt),()=>{const m=txt.match(/```json\s*([\s\S]*?)\s*```/);if(m)return JSON.parse(m[1]);throw 0;},()=>{const m=txt.match(/\{[\s\S]*"market_context"[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw 0;},()=>{const s=txt.indexOf("{"),e=txt.lastIndexOf("}");if(s>-1&&e>s)return JSON.parse(txt.slice(s,e+1));throw 0;}];for(const fn of t){try{return fn();}catch{}}throw new Error("Format JSON invalide");}
 const STATS=["Recherche prix et volumes en temps réel...","Calcul des 5 filtres anti-perte...","Analyse IV options et earnings...","Vérification activité initiés...","Évaluation risques géopolitiques...","Finalisation des signaux..."];
+async function callGemini(){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${S.geminiKey}`;
+  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:PROMPT}],role:"user"}],tools:[{google_search:{}}],generationConfig:{temperature:0.1,maxOutputTokens:8192}})});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"Gemini HTTP "+res.status);}
+  const data=await res.json();
+  const parts=data.candidates?.[0]?.content?.parts||[];
+  const txt=parts.filter(p=>p.text).map(p=>p.text).join("");
+  if(!txt)throw new Error("Gemini: réponse vide");
+  return txt;
+}
+
+async function callAnthropic(){
+  let msgs=[{role:"user",content:PROMPT}],txt="";
+  for(let r=0;r<8;r++){
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.anthropicKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:5000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:msgs})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"HTTP "+res.status);}
+    const r2=await res.json(),c=r2.content||[];
+    if(r2.stop_reason==="end_turn"){txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");break;}
+    if(r2.stop_reason==="tool_use"){msgs.push({role:"assistant",content:c});const tr=c.filter(b=>b.type==="tool_use").map(b=>({type:"tool_result",tool_use_id:b.id,content:"OK"}));if(tr.length)msgs.push({role:"user",content:tr});}
+    else{txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");if(txt)break;}
+  }
+  if(!txt)throw new Error("Aucune réponse Anthropic");
+  return txt;
+}
+
 async function runScan(){
-  if(S.loading||!S.key)return;
+  if(S.loading||!activeKey())return;
   S.loading=true;
   const btn=ge("scan-btn"),dot=ge("dot"),sb=ge("sbar"),st=ge("sbar-txt");
   btn.disabled=true;btn.classList.add("scanning");dot.className="dot dot-scan";
@@ -461,20 +587,14 @@ async function runScan(){
   let si=0;st.textContent=STATS[0];
   const sint=setInterval(()=>{si=(si+1)%STATS.length;st.textContent=STATS[si];},3500);
   try{
-    let msgs=[{role:"user",content:PROMPT}],txt="";
-    for(let r=0;r<8;r++){
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:5000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:msgs})});
-      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"HTTP "+res.status);}
-      const r2=await res.json(),c=r2.content||[];
-      if(r2.stop_reason==="end_turn"){txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");break;}
-      if(r2.stop_reason==="tool_use"){msgs.push({role:"assistant",content:c});const tr=c.filter(b=>b.type==="tool_use").map(b=>({type:"tool_result",tool_use_id:b.id,content:"OK"}));if(tr.length)msgs.push({role:"user",content:tr});}
-      else{txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");if(txt)break;}
-    }
+    const txt=S.provider==="gemini"?await callGemini():await callAnthropic();
     clearInterval(sint);
-    if(!txt)throw new Error("Aucune réponse");
     const p=parseData(txt);
     checkAlerts(p.stocks||[]);
-    S.data=p;S.scans++;renderData(p);save();
+    const today=new Date().toDateString();
+    if(S.dailyDate!==today){S.dailyDate=today;S.dailyCount=0;}
+    S.dailyCount++;
+    S.data=p;S.scans++;renderData(p);save();updateProviderUI();
     sb.style.display="none";dot.className=S.autoOn?"dot dot-auto":"dot dot-live";
     if(S.autoOn){S.cd=S.ivSec;updateCD();}
   }catch(e){
@@ -603,8 +723,21 @@ ge("al-overlay").classList.add("show");}
 function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-above").classList.contains("on"),above:parseFloat(ge("inp-above").value)||0,belowOn:ge("tgl-below").classList.contains("on"),below:parseFloat(ge("inp-below").value)||0,sigOn:ge("tgl-sig").classList.contains("on"),lastSig:S.alerts[t]?.lastSig||""};save();closeSheet("al-overlay");if(S.data)renderData(S.data);}
 
 // ══ SETTINGS ══
-function showSettings(){ge("cfg-overlay").classList.add("show");}
-function changeKey(){const v=ge("key-change").value.trim();if(!v)return;S.key=v;save();closeSheet("cfg-overlay");}
+function showSettings(){
+  ge("cfg-overlay").classList.add("show");
+  const gkc=ge("gemini-key-change"),akc=ge("anthropic-key-change");
+  if(gkc)gkc.value=S.geminiKey;
+  if(akc)akc.value=S.anthropicKey;
+  updateProviderUI();
+}
+function saveKeys(){
+  const gv=ge("gemini-key-change").value.trim();
+  const av=ge("anthropic-key-change").value.trim();
+  if(gv)S.geminiKey=gv;
+  if(av)S.anthropicKey=av;
+  save();closeSheet("cfg-overlay");updateProviderUI();
+}
+function changeKey(){saveKeys();}
 function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
 </script>
 </body>
