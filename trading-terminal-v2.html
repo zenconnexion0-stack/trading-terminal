@@ -346,8 +346,8 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 
 <script>
 // ══════════════════════════════════════════════════
-// 🔑 CLÉ API OPENROUTER (gratuite)
-const API_KEY = "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";
+// 🔑 CLÉ API GROQ (gratuite)
+const API_KEY = "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";
 // ══════════════════════════════════════════════════
 
 // ══ CONFIG ACTIONS ══
@@ -541,14 +541,14 @@ function parseData(txt){
 
 async function callClaudeWithTools(prompt){
   if(!S.key)throw new Error("Clé API manquante");
-  const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
+  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
       "Authorization":"Bearer "+S.key
     },
     body:JSON.stringify({
-      model:"mistralai/mistral-7b-instruct:free",
+      model:"llama-3.3-70b-versatile",
       max_tokens:8000,
       temperature:0.1,
       messages:[{role:"user",content:prompt}]
@@ -557,14 +557,13 @@ async function callClaudeWithTools(prompt){
   if(!res.ok){
     const e=await res.json().catch(()=>({}));
     const msg=e.error?.message||"HTTP "+res.status;
-    if(res.status===401)throw new Error("Clé API invalide (401). Vérifiez sur openrouter.ai/keys");
+    if(res.status===401)throw new Error("Clé API Groq invalide. Vérifiez sur console.groq.com");
     if(res.status===429)throw new Error("Limite atteinte. Attendez 1 minute.");
-    if(res.status===402)throw new Error("Crédits insuffisants sur OpenRouter.");
     throw new Error("Erreur "+res.status+": "+msg);
   }
   const data=await res.json();
   const txt=data.choices?.[0]?.message?.content||"";
-  if(!txt)throw new Error("Aucune réponse");
+  if(!txt)throw new Error("Aucune réponse de Groq");
   return txt;
 }
 
