@@ -732,10 +732,10 @@ function updateCD(){const t=$("cd-txt"),f=$("cd-fill");if(t)t.textContent=fCD(S.
 // Tried in order — first success wins
 // Tried in order — 70b for quality, 8b as fallback if rate limited
 const FALLBACK_MODELS = [
-  "llama-3.3-70b-versatile",   // ← PRIMARY: génère prix/entrée/stop complets
-  "llama-3.1-70b-versatile",   // ← fallback 70b
-  "llama-3.1-8b-instant",      // ← urgence seulement (JSON incomplet)
-  "llama3-8b-8192",
+  "llama-3.3-70b-versatile",
+  "llama-3.1-70b-versatile",
+  "llama-3.1-8b-instant",
+  "gemma2-9b-it",
 ];
 
 // ── DIAGNOSTIC TOOL ───────────────────────────────
