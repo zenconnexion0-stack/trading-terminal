@@ -231,17 +231,17 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
         <span style="background:rgba(251,191,36,.15);border:1px solid #fbbf24;color:#fbbf24;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">SCORING IA</span>
         <span style="background:rgba(96,165,250,.15);border:1px solid #60a5fa;color:#60a5fa;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PORTEFEUILLE TR</span>
       </div>
-      <div class="setup-sub" style="margin-top:10px">Terminal IA v4 avec analyse de portefeuille Trade Republic et scoring des meilleures opportunités court terme.<br><br>Entrez votre clé API Anthropic pour commencer.</div>
+      <div class="setup-sub" style="margin-top:10px">Terminal IA v4 avec analyse de portefeuille Trade Republic et scoring des meilleures opportunités court terme.<br><br>Entrez votre clé API Google Gemini — <strong style="color:var(--buy)">100% gratuite, 1500 scans/jour</strong>.</div>
     </div>
     <div>
-      <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Anthropic</div>
-      <input type="password" class="fi" id="key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
+      <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Google Gemini</div>
+      <input type="password" class="fi" id="key-input" placeholder="AIzaSy..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
     </div>
     <div id="setup-api-status" class="api-status" style="display:none"></div>
     <button class="btn-p" id="setup-btn" onclick="saveKey()">
       <i class="ti ti-arrow-right" style="font-size:14px"></i>Accéder au terminal
     </button>
-    <div class="setup-note">Clé gratuite sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>Stockée uniquement sur cet appareil. Jamais envoyée ailleurs.</div>
+    <div class="setup-note">Clé 100% gratuite sur <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a><br>Stockée uniquement sur cet appareil. Jamais envoyée ailleurs.</div>
   </div>
 </div>
 
@@ -335,8 +335,8 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
         Menu (⋮) → <strong style="color:var(--t1)">Ajouter à l'écran d'accueil</strong>
       </div>
     </div>
-    <div style="font-size:12px;font-weight:600;color:var(--t1)">Changer la clé API</div>
-    <div class="api-row"><input type="password" id="key-change" placeholder="sk-ant-api03-..." class="fi"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--t1)">Changer la clé API Gemini</div>
+    <div class="api-row"><input type="password" id="key-change" placeholder="AIzaSy..." class="fi"></div>
     <div id="cfg-api-status" class="api-status" style="display:none"></div>
     <button class="btn-p" onclick="changeKey()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer et tester</button>
     <button class="btn-p" style="background:var(--bg3);color:var(--t2);border:1px solid var(--bd)" onclick="requestNotif()"><i class="ti ti-bell" style="font-size:14px"></i>Activer les notifications</button>
@@ -462,8 +462,8 @@ window.onload=()=>{load();if(!S.key){ge("setup").style.display="flex";}else{star
 
 function saveKey(){
   const v=ge("key-input").value.trim();
-  if(!v){showApiStatus("setup-api-status","err","Entrez votre clé API");return;}
-  if(!v.startsWith("sk-ant-")){showApiStatus("setup-api-status","err","Format invalide — doit commencer par sk-ant-");return;}
+  if(!v){showApiStatus("setup-api-status","err","Entrez votre clé API Gemini");return;}
+  if(!v.startsWith("AIza")){showApiStatus("setup-api-status","err","Format invalide — doit commencer par AIzaSy...");return;}
   S.key=v;save();ge("setup").style.display="none";startApp();
 }
 
@@ -522,76 +522,29 @@ function parseData(txt){
   throw new Error("Format JSON invalide — réponse: "+txt.slice(0,200));
 }
 
-async function callClaudeWithTools(prompt,maxRounds=10){
+async function callClaudeWithTools(prompt){
   if(!S.key)throw new Error("Clé API manquante");
-  
-  let messages=[{role:"user",content:prompt}];
-  let finalText="";
-  
-  for(let round=0;round<maxRounds;round++){
-    const res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "x-api-key":S.key,
-        "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true"
-      },
-      body:JSON.stringify({
-        model:"claude-sonnet-4-6",
-        max_tokens:6000,
-        tools:[{type:"web_search_20250305",name:"web_search"}],
-        messages
-      })
-    });
-    
-    if(!res.ok){
-      const e=await res.json();
-      const msg=e.error?.message||"HTTP "+res.status;
-      if(res.status===401)throw new Error("Clé API invalide ou expirée. Vérifiez dans Paramètres.");
-      if(res.status===429)throw new Error("Limite de taux atteinte. Attendez 1 minute.");
-      if(res.status===400)throw new Error("Requête invalide: "+msg);
-      throw new Error(msg);
-    }
-    
-    const data=await res.json();
-    const content=data.content||[];
-    
-    // Collecte le texte de cette réponse
-    const textBlocks=content.filter(b=>b.type==="text").map(b=>b.text).join("");
-    if(textBlocks)finalText=textBlocks;
-    
-    if(data.stop_reason==="end_turn"){
-      // Terminé — retourner le texte final
-      return finalText;
-    }
-    
-    if(data.stop_reason==="tool_use"){
-      // L'IA veut utiliser des outils — on ajoute sa réponse et les résultats d'outils
-      messages.push({role:"assistant",content});
-      
-      // Construire les résultats d'outils (le serveur Anthropic gère le web_search réel)
-      // On retourne un résultat vide pour que l'IA continue avec ce qu'elle sait
-      const toolResults=content
-        .filter(b=>b.type==="tool_use")
-        .map(b=>({
-          type:"tool_result",
-          tool_use_id:b.id,
-          content:"Recherche effectuée. Utilise tes connaissances les plus récentes et les données du marché pour compléter l'analyse."
-        }));
-      
-      if(toolResults.length>0){
-        messages.push({role:"user",content:toolResults});
-      }
-      // Continuer la boucle
-    } else {
-      // Autre stop reason — retourner ce qu'on a
-      return finalText;
-    }
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${S.key}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      tools:[{google_search:{}}],
+      generationConfig:{maxOutputTokens:8000,temperature:0.1}
+    })
+  });
+  if(!res.ok){
+    const e=await res.json();
+    const msg=e.error?.message||"HTTP "+res.status;
+    if(res.status===400)throw new Error("Clé API invalide. Vérifiez dans Paramètres.");
+    if(res.status===429)throw new Error("Limite de taux atteinte. Attendez 1 minute.");
+    if(res.status===403)throw new Error("Clé API invalide ou permissions insuffisantes.");
+    throw new Error(msg);
   }
-  
-  if(!finalText)throw new Error("Aucune réponse après "+maxRounds+" tours");
-  return finalText;
+  const data=await res.json();
+  const txt=(data.candidates?.[0]?.content?.parts||[]).filter(p=>p.text).map(p=>p.text).join("");
+  if(!txt)throw new Error("Aucune réponse de Gemini");
+  return txt;
 }
 
 const SCAN_STATS=["Recherche prix et volumes en temps réel...","Calcul du scoring /100 pour chaque action...","Analyse des 5 filtres anti-perte...","Vérification activité initiés...","Évaluation risques géopolitiques...","Classement par score d'opportunité..."];
@@ -760,10 +713,10 @@ function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-abo
 function showSettings(){ge("cfg-overlay").classList.add("show");}
 function changeKey(){
   const v=ge("key-change").value.trim();
-  if(!v){showApiStatus("cfg-api-status","err","Entrez une clé API");return;}
-  if(!v.startsWith("sk-ant-")){showApiStatus("cfg-api-status","err","Format invalide — doit commencer par sk-ant-");return;}
+  if(!v){showApiStatus("cfg-api-status","err","Entrez une clé API Gemini");return;}
+  if(!v.startsWith("AIza")){showApiStatus("cfg-api-status","err","Format invalide — doit commencer par AIzaSy...");return;}
   S.key=v;save();
-  showApiStatus("cfg-api-status","ok","Clé enregistrée ✓");
+  showApiStatus("cfg-api-status","ok","Clé Gemini enregistrée ✓");
   setTimeout(()=>closeSheet("cfg-overlay"),1200);
 }
 function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
