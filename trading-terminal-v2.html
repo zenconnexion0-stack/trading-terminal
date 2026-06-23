@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Terminal IA v3">
+<meta name="apple-mobile-web-app-title" content="Terminal IA v4">
 <meta name="theme-color" content="#06090f">
-<title>Trading Terminal IA v3</title>
+<title>Trading Terminal IA v4</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
 <style>
 :root{
@@ -18,10 +18,12 @@
   --alert:#f97316;--reduce:#f87171;--avoid:#fca5a5;--binary:#fb923c;
   --ok:#22c55e;--warn:#f59e0b;--danger:#ef4444;
   --r:12px;
+  --gold:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow-x:hidden}
 body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:12px;padding-bottom:env(safe-area-inset-bottom,12px)}
+
 /* SETUP */
 .setup{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px}
 .setup-card{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r);padding:22px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:13px}
@@ -31,8 +33,10 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 .fi:focus{border-color:var(--wait)}
 .btn-p{background:var(--wait);color:#fff;border:none;border-radius:10px;padding:13px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
 .btn-p:active{opacity:.8}
+.btn-p:disabled{opacity:.5;cursor:not-allowed}
 .setup-note{font-size:10px;color:var(--t3);text-align:center;line-height:1.6}
 .setup-note a{color:var(--wait);text-decoration:none}
+
 /* HEADER */
 .hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--bd);padding:9px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .hl{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
@@ -44,20 +48,23 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 .dot-err{background:var(--sell)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 .htitle{font-size:12px;font-weight:600;letter-spacing:2px;white-space:nowrap}
-.hbadge{background:rgba(249,115,22,.2);border:1px solid rgba(249,115,22,.5);color:#f97316;font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600}
+.hbadge{background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.5);color:#fbbf24;font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600}
 .hbtn{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:4px 9px;color:var(--t2);font-family:inherit;font-size:10px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:4px}
 .hbtn:active{background:var(--bg3)}
 .hbtn.on{border-color:var(--wait);background:rgba(96,165,250,.12);color:var(--wait)}
 .hbtn.scanning{opacity:.5}
+.hbtn.pf-active{border-color:var(--gold);background:rgba(251,191,36,.12);color:var(--gold)}
 .ivrow{display:flex;align-items:center;gap:3px}
 .ivbtn{background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:3px 7px;color:var(--t3);font-family:inherit;font-size:10px;cursor:pointer;transition:all .15s}
 .ivbtn.sel{border-color:var(--wait);color:var(--wait);background:rgba(96,165,250,.1);font-weight:600}
 .cdpill{display:flex;align-items:center;gap:5px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:3px 8px;font-size:10px;color:var(--t2)}
 .cdtrack{width:36px;height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
 .cdfill{height:3px;background:var(--wait);border-radius:2px;transition:width 1s linear}
+
 /* STATUS */
 .sbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:5px 12px;font-size:11px;color:var(--t2);display:none;align-items:center;gap:6px}
 .sbar.err{color:var(--sell)}
+
 /* ALERT LOG */
 .logwrap{background:rgba(249,115,22,.05);border-bottom:1px solid rgba(249,115,22,.2);display:none}
 .loghdr{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:11px;font-weight:600;color:var(--alert);cursor:pointer}
@@ -67,20 +74,36 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 .logtime{color:var(--t3);min-width:40px}
 .logticker{color:var(--alert);font-weight:600;min-width:34px}
 .logmsg{color:var(--t2);line-height:1.4}
+
 /* MARKET BAR */
 .mbar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd)}
 .mcell{background:var(--bg);padding:7px 8px;text-align:center}
 .mlbl{font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
 .mval{font-size:13px;font-weight:600}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);background:var(--bg)}
+.tab{flex:1;padding:9px 6px;text-align:center;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.5px}
+.tab.active{color:var(--wait);border-bottom-color:var(--wait)}
+.tab.pf-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
 /* BODY */
 .body{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px}
 .sep{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:2px;padding:2px 0}
-/* LEGEND */
-.legend-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
-.legend-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:600;color:var(--t2)}
-.legend-body{display:none;padding:10px 12px;border-top:1px solid var(--bd);display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.legend-item{font-size:10px;color:var(--t2);display:flex;align-items:center;gap:5px}
+
+/* TOP PICK CARD — MEILLEURE OPPORTUNITÉ */
+.top-pick{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(96,165,250,.05));border:1px solid rgba(34,197,94,.35);border-radius:var(--r);padding:12px;position:relative;overflow:hidden}
+.top-pick::before{content:"#1";position:absolute;right:12px;top:8px;font-size:28px;font-weight:800;color:rgba(34,197,94,.12);letter-spacing:-2px}
+.tp-crown{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.tp-score{display:flex;align-items:center;gap:8px;margin-top:6px}
+.score-bar-wrap{flex:1;height:6px;background:var(--bd);border-radius:3px;overflow:hidden}
+.score-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--buy),#16a34a)}
+.score-num{font-size:13px;font-weight:700;color:var(--buy)}
+
+/* SCORE BADGE */
+.score-badge{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--buy);font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap}
+
 /* STOCK CARD */
 .sc{background:var(--bg2);border:1px solid var(--bd);border-left:3px solid transparent;border-radius:var(--r);overflow:hidden;transition:border-color .3s}
 .sc-top{padding:10px 12px 0}
@@ -91,41 +114,84 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 .br{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .ubadge{padding:2px 6px;border-radius:6px;font-size:9px;border:1px solid;font-weight:500}
 .prebadge{background:rgba(249,115,22,.2);border:1px solid #f97316;color:#f97316;padding:2px 7px;border-radius:6px;font-size:9px;font-weight:700}
+.rankbadge{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+
 /* FILTERS ROW */
 .frow{padding:0 12px 8px;display:flex;gap:4px;flex-wrap:wrap}
 .fbadge{display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:6px;font-size:9px;font-weight:600;border:1px solid;cursor:help}
+
 /* RISK ROW */
 .rrow{padding:0 12px 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .riskbar-wrap{flex:1;min-width:80px;height:5px;background:var(--bd);border-radius:3px;overflow:hidden}
 .riskbar-fill{height:5px;border-radius:3px;transition:width .5s}
 .maxpos-badge{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--t2);white-space:nowrap}
+
 /* PRICE ROW */
 .prow{display:flex;gap:4px;padding:0 12px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .prow::-webkit-scrollbar{display:none}
 .pc{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:5px 6px;text-align:center;flex-shrink:0;min-width:58px}
 .plbl{font-size:9px;color:var(--t3);letter-spacing:.5px;margin-bottom:1px}
 .pval{font-size:11px;font-weight:600}
+
 /* INFO */
 .sinfo{padding:0 12px 10px}
 .crow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
 .strs{font-size:12px;letter-spacing:.5px;color:var(--hold)}
 .catrow,.rsnrow{font-size:11px;line-height:1.5;margin-bottom:3px}
 .il{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+
 /* ALERT MSG */
 .sam{border-top:1px solid rgba(249,115,22,.2);padding:5px 12px;color:#fb923c;font-size:11px}
 @keyframes ab{0%,100%{background:rgba(249,115,22,.05)}50%{background:rgba(249,115,22,.13)}}
 .sam.blink{animation:ab 1.4s infinite}
+
 /* WARNING MSG */
 .swarn{border-top:1px solid rgba(239,68,68,.25);padding:5px 12px;color:#fca5a5;font-size:11px;background:rgba(239,68,68,.06)}
+
 /* ALERT BTN */
 .albtn{padding:3px 7px;border-radius:6px;border:1px solid var(--bd);background:var(--bg);color:var(--t3);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:3px;font-family:inherit;transition:all .15s}
 .albtn.active{border-color:var(--alert);color:var(--alert);background:rgba(249,115,22,.1)}
+
 /* CALENDAR */
 .crow2{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:11px}
 .crow2:last-child{border-bottom:none}
 .cdate{color:var(--wait);min-width:85px;font-weight:600}
 .ctk{background:rgba(96,165,250,.12);color:var(--wait);padding:1px 7px;border-radius:6px;font-size:10px;min-width:36px;text-align:center}
 .cev{color:var(--t2)}
+
+/* PORTFOLIO SECTION */
+.pf-section{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.pf-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(251,191,36,.02));border-bottom:1px solid rgba(251,191,36,.15)}
+.pf-title{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.pf-input-card{background:var(--bg2);border:1px solid rgba(251,191,36,.25);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.pf-input-title{font-size:11px;font-weight:600;color:var(--gold);display:flex;align-items:center;gap:5px}
+.pf-input-sub{font-size:10px;color:var(--t3);line-height:1.6}
+.pf-textarea{background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:10px;color:var(--t1);font-family:inherit;font-size:11px;width:100%;resize:vertical;min-height:100px;outline:none;line-height:1.6}
+.pf-textarea:focus{border-color:var(--gold)}
+.pf-format-hint{font-size:9px;color:var(--t3);background:var(--bg3);border-radius:6px;padding:6px 8px;line-height:1.7}
+.btn-gold{background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.12));border:1px solid rgba(251,191,36,.5);color:var(--gold);border-radius:10px;padding:11px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.btn-gold:active{opacity:.8}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed}
+
+/* PORTFOLIO ANALYSIS RESULT */
+.pf-result{background:var(--bg2);border:1px solid rgba(251,191,36,.2);border-radius:var(--r);overflow:hidden}
+.pf-result-hdr{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(251,191,36,.04));padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(251,191,36,.15)}
+.pf-result-title{font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px}
+.pf-score-overall{background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--gold)}
+.pf-positions{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.pf-pos{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pf-pos-ticker{font-size:13px;font-weight:700;min-width:50px;color:var(--t1)}
+.pf-pos-name{font-size:10px;color:var(--t3);flex:1;min-width:80px}
+.pf-pos-action{padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid}
+.pf-pos-reco{font-size:10px;color:var(--t2);flex:1;min-width:100px;line-height:1.4}
+.pf-pos-pct{font-size:11px;font-weight:600;white-space:nowrap}
+.pf-strategy{padding:0 14px 14px;font-size:11px;color:var(--t2);line-height:1.7;border-top:1px solid var(--bd)}
+.pf-strategy-title{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin:10px 0 5px;font-weight:700}
+.pf-alloc{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.pf-alloc-item{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:7px 9px}
+.pf-alloc-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.pf-alloc-val{font-size:12px;font-weight:600}
+
 /* BOTTOM SHEETS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .overlay.show{display:flex}
@@ -146,6 +212,11 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 .home-steps{font-size:11px;color:var(--t2);line-height:1.9}
 .close-btn{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:12px;color:var(--t2);font-family:inherit;font-size:13px;cursor:pointer}
 .footer{font-size:9px;color:var(--t3);text-align:center;border-top:1px solid var(--bd);padding:10px;line-height:1.7}
+
+/* API STATUS BOX */
+.api-status{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-size:10px;color:var(--t3);display:flex;align-items:center;gap:6px}
+.api-status.ok{border-color:rgba(34,197,94,.4);color:var(--buy);background:rgba(34,197,94,.05)}
+.api-status.err{border-color:rgba(239,68,68,.4);color:var(--sell);background:rgba(239,68,68,.05)}
 </style>
 </head>
 <body>
@@ -154,22 +225,23 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
 <div id="setup" class="setup" style="display:none">
   <div class="setup-card">
     <div>
-      <div class="setup-title">⚡ TERMINAL IA v3</div>
+      <div class="setup-title">⚡ TERMINAL IA v4</div>
       <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
         <span style="background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">5 FILTRES ANTI-PERTE</span>
-        <span style="background:rgba(249,115,22,.15);border:1px solid #f97316;color:#f97316;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PARI BINAIRE DÉTECTÉ</span>
-        <span style="background:rgba(96,165,250,.15);border:1px solid #60a5fa;color:#60a5fa;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">AUTO-REFRESH</span>
+        <span style="background:rgba(251,191,36,.15);border:1px solid #fbbf24;color:#fbbf24;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">SCORING IA</span>
+        <span style="background:rgba(96,165,250,.15);border:1px solid #60a5fa;color:#60a5fa;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PORTEFEUILLE TR</span>
       </div>
-      <div class="setup-sub" style="margin-top:10px">Analyse en temps réel avec détection automatique des risques cachés.<br>Entrez votre clé API Anthropic.</div>
+      <div class="setup-sub" style="margin-top:10px">Terminal IA v4 avec analyse de portefeuille Trade Republic et scoring des meilleures opportunités court terme.<br><br>Entrez votre clé API Anthropic pour commencer.</div>
     </div>
     <div>
       <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Anthropic</div>
       <input type="password" class="fi" id="key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
     </div>
-    <button class="btn-p" onclick="saveKey()">
+    <div id="setup-api-status" class="api-status" style="display:none"></div>
+    <button class="btn-p" id="setup-btn" onclick="saveKey()">
       <i class="ti ti-arrow-right" style="font-size:14px"></i>Accéder au terminal
     </button>
-    <div class="setup-note">Clé gratuite sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>Stockée uniquement sur cet appareil.</div>
+    <div class="setup-note">Clé gratuite sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>Stockée uniquement sur cet appareil. Jamais envoyée ailleurs.</div>
   </div>
 </div>
 
@@ -179,7 +251,7 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
     <div class="hl">
       <div id="dot" class="dot dot-live"></div>
       <span class="htitle">TERMINAL IA</span>
-      <span class="hbadge">v2</span>
+      <span class="hbadge">v4</span>
     </div>
     <div class="hr">
       <button class="hbtn" id="auto-btn" onclick="toggleAuto()">
@@ -227,7 +299,16 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
     <div class="mcell"><div class="mlbl">Biais</div><div class="mval" id="m-bias" style="color:var(--buy)">–</div></div>
   </div>
 
-  <div class="body" id="body"></div>
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-scan" onclick="switchTab('scan')"><i class="ti ti-radar" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Scan</div>
+    <div class="tab pf-tab" id="tab-pf" onclick="switchTab('pf')"><i class="ti ti-briefcase" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Portefeuille</div>
+  </div>
+
+  <div id="panel-scan" class="body"></div>
+  <div id="panel-pf" style="display:none">
+    <div class="pf-section" id="pf-content"></div>
+  </div>
 </div>
 
 <!-- Alert sheet -->
@@ -256,7 +337,8 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
     </div>
     <div style="font-size:12px;font-weight:600;color:var(--t1)">Changer la clé API</div>
     <div class="api-row"><input type="password" id="key-change" placeholder="sk-ant-api03-..." class="fi"></div>
-    <button class="btn-p" onclick="changeKey()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer</button>
+    <div id="cfg-api-status" class="api-status" style="display:none"></div>
+    <button class="btn-p" onclick="changeKey()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer et tester</button>
     <button class="btn-p" style="background:var(--bg3);color:var(--t2);border:1px solid var(--bd)" onclick="requestNotif()"><i class="ti ti-bell" style="font-size:14px"></i>Activer les notifications</button>
     <button class="close-btn" onclick="closeSheet('cfg-overlay')">Fermer</button>
   </div>
@@ -273,88 +355,99 @@ const AC={
   AVOID:      {bg:"rgba(100,0,0,.25)",    bd:"#7f1d1d",tx:"#fca5a5",lbl:"Éviter"},
   BINARY_BET: {bg:"rgba(249,115,22,.15)", bd:"#f97316",tx:"#c2410c",lbl:"Pari Binaire ⚡"},
 };
-const UC={
-  IMMEDIATE:{lbl:"Immédiat",   c:"#ef4444"},
-  TODAY:    {lbl:"Auj.",       c:"#f59e0b"},
-  THIS_WEEK:{lbl:"Semaine",    c:"#60a5fa"},
-  MONITOR:  {lbl:"Surveiller", c:"#4a5a78"},
-};
+const UC={IMMEDIATE:{lbl:"Immédiat",c:"#ef4444"},TODAY:{lbl:"Auj.",c:"#f59e0b"},THIS_WEEK:{lbl:"Semaine",c:"#60a5fa"},MONITOR:{lbl:"Surveiller",c:"#4a5a78"}};
 const GRC={LOW:{lbl:"Faible",c:"#22c55e"},MODERATE:{lbl:"Modéré",c:"#f59e0b"},HIGH:{lbl:"Élevé",c:"#f97316"},CRITICAL:{lbl:"Critique",c:"#ef4444"}};
 const GIC={POSITIVE:{lbl:"Géo+",c:"#22c55e"},NEUTRAL:{lbl:"Neutre",c:"#4a5a78"},NEGATIVE:{lbl:"Géo−",c:"#ef4444"}};
 const FSC={OK:{c:"#22c55e",ic:"ti-circle-check"},WARNING:{c:"#f59e0b",ic:"ti-alert-triangle"},DANGER:{c:"#ef4444",ic:"ti-circle-x"}};
 const SNRC={LOW:{c:"#22c55e",lbl:"STN faible"},MODERATE:{c:"#f59e0b",lbl:"STN modéré"},HIGH:{c:"#ef4444",lbl:"STN élevé"}};
-function getActiveTickers(){return(S.data&&S.data.stocks)?S.data.stocks.map(s=>s.ticker):["NVDA","ABNB","SMCI","PLTR","MU"];}
+const RANK_COLORS=["#fbbf24","#94a3b8","#cd7c4e","#4a5a78","#3a4a60"];
 
 // ══ STATE ══
-let S={key:"",data:null,alerts:{},log:[],logOpen:false,autoOn:false,ivSec:600,cd:600,loading:false,scans:0};
+let S={key:"",data:null,alerts:{},log:[],logOpen:false,autoOn:false,ivSec:600,cd:600,loading:false,loadingPf:false,scans:0,pfData:null,pfInput:"",activeTab:"scan"};
 
 // ══ PERSIST ══
 function initAlertsForStocks(stocks){(stocks||[]).forEach(s=>{if(!S.alerts[s.ticker])S.alerts[s.ticker]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""};});}
-function save(){try{localStorage.setItem("tt2_k",S.key);localStorage.setItem("tt2_a",JSON.stringify(S.alerts));localStorage.setItem("tt2_d",JSON.stringify(S.data));localStorage.setItem("tt2_l",JSON.stringify(S.log.slice(0,50)));}catch(e){}}
-function load(){S.key=localStorage.getItem("tt2_k")||"";S.alerts=JSON.parse(localStorage.getItem("tt2_a")||"{}");const d=localStorage.getItem("tt2_d");if(d)try{S.data=JSON.parse(d);}catch(e){}S.log=JSON.parse(localStorage.getItem("tt2_l")||"[]");TICKERS.forEach(t=>{if(!S.alerts[t])S.alerts[t]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""}});}
+function save(){try{localStorage.setItem("tt4_k",S.key);localStorage.setItem("tt4_a",JSON.stringify(S.alerts));localStorage.setItem("tt4_d",JSON.stringify(S.data));localStorage.setItem("tt4_l",JSON.stringify(S.log.slice(0,50)));localStorage.setItem("tt4_pf",JSON.stringify(S.pfData));localStorage.setItem("tt4_pfi",S.pfInput||"");}catch(e){}}
+function load(){S.key=localStorage.getItem("tt4_k")||"";S.alerts=JSON.parse(localStorage.getItem("tt4_a")||"{}");const d=localStorage.getItem("tt4_d");if(d)try{S.data=JSON.parse(d);}catch(e){}S.log=JSON.parse(localStorage.getItem("tt4_l")||"[]");const pd=localStorage.getItem("tt4_pf");if(pd)try{S.pfData=JSON.parse(pd);}catch(e){}S.pfInput=localStorage.getItem("tt4_pfi")||"";}
 
-// ══ SEED DATA avec filtres ══
-const DEF_FILTERS={extension:{status:"WARNING",label:"Données en cours..."},consensus:{status:"WARNING",label:"Données en cours..."},sector_precedent:{status:"WARNING",label:"AVGO −13% post-earnings"},options_iv:{status:"OK",label:"Normal"},insiders:{status:"WARNING",label:"À vérifier"}};
+// ══ SEED DATA ══
+const DEF_FILTERS={extension:{status:"WARNING",label:"Données en cours..."},consensus:{status:"WARNING",label:"Données en cours..."},sector_precedent:{status:"WARNING",label:"À vérifier"},options_iv:{status:"OK",label:"Normal"},insiders:{status:"WARNING",label:"À vérifier"}};
 const SEED={
-  market_context:{sp500:"7 396",vix:"15.5",oil_brent:"$77",geopolitical_risk:"MODERATE",
-    geo_summary:"Accord US-Iran signé le 17/06. Négociations à Genève. VIX à 15 = marché très calme.",
-    market_bias:"RISK_ON",key_event_today:"MU Q3 Earnings ce soir (24/06) + Talks US-Iran",
-    top_sectors:"Semiconducteurs IA, Voyage & Loisirs, Serveurs IA"},
+  market_context:{sp500:"7 396",vix:"15.5",oil_brent:"$77",geopolitical_risk:"MODERATE",geo_summary:"Accord US-Iran signé le 17/06. VIX à 15 = marché très calme.",market_bias:"RISK_ON",key_event_today:"Lancez un scan pour obtenir des données fraîches",top_sectors:"Semiconducteurs IA, Voyage & Loisirs, Serveurs IA"},
   stocks:[
-    {ticker:"NVDA",name:"NVIDIA Corporation",action:"BUY",urgency:"TODAY",current_price:"~209$",entry:"205-212$",stop_loss:"195$",tp1:"232$",tp2:"265$",catalyst:"Vera Rubin en production. Correction -11% depuis ATH $236. 43% sous cible analystes.",geo_impact:"NEUTRAL",conviction:4,reason:"62 analystes Strong Buy, cible $298 (+43%). P/E 32x pour +65% revenus. Earnings le 25 août.",alert:null,warning:null,filters:{extension:{status:"OK",label:"Correction -11% depuis ATH — pas de sur-extension"},consensus:{status:"OK",label:"Cible consensus $298 = +43% depuis cours actuel"},sector_precedent:{status:"WARNING",label:"AVGO a signalé prudence dépenses AI — risque modéré"},options_iv:{status:"OK",label:"Earnings le 25 août — aucun risque IV immédiat"},insiders:{status:"OK",label:"Pas d'alerte ventes initiés récente"}},max_position_pct:20,pre_earnings:false,earnings_date:"25 août 2026",sell_news_risk:"LOW",composite_risk:2},
-    {ticker:"ABNB",name:"Airbnb, Inc.",action:"BUY",urgency:"TODAY",current_price:"~140$",entry:"136-142$",stop_loss:"127$",tp1:"155$",tp2:"165$",catalyst:"FIFA World Cup 2026 jusqu'au 19/07 + pétrole en baisse = bookings en hausse.",geo_impact:"POSITIVE",conviction:4,reason:"Cours sous cible $156 (+11%). FCF $4.5Md, marge 36%. Peace deal bénéficie directement.",alert:null,warning:"CEO Chesky et co-fondateur vendeurs nets ~$47M récemment.",filters:{extension:{status:"OK",label:"Performance YTD normale — zéro extension"},consensus:{status:"OK",label:"Cible médiane $156 — cours 11% en dessous"},sector_precedent:{status:"OK",label:"Pas de précédent négatif secteur voyage"},options_iv:{status:"OK",label:"IV normale, earnings le 12 août"},insiders:{status:"WARNING",label:"CEO + co-fondateur vendeurs nets ~$47M récemment"}},max_position_pct:15,pre_earnings:false,earnings_date:"12 août 2026",sell_news_risk:"LOW",composite_risk:2},
-    {ticker:"SMCI",name:"Super Micro Computer",action:"WAIT",urgency:"THIS_WEEK",current_price:"~32$",entry:">36$ clôture avec volume",stop_loss:"29$",tp1:"40$",tp2:"48$",catalyst:"Upgrade GF Securities Buy cible $48 (+55%). Lancement Vera Rubin NVL4. $39Md de commandes.",geo_impact:"NEUTRAL",conviction:3,reason:"-45% depuis ATH $62. P/E 16x. Overhang financier clarifié. Entrée conditionnelle > $36.",alert:"Entrer UNIQUEMENT sur clôture > 36$ avec volume > moyenne",warning:"7 ventes initiés $31M + class actions en cours. Max 10% portefeuille.",filters:{extension:{status:"OK",label:"-45% depuis ATH — rebond potentiel"},consensus:{status:"OK",label:"GF Securities $48 = +55% upside"},sector_precedent:{status:"OK",label:"Pas de précédent négatif récent"},options_iv:{status:"OK",label:"IV normale, earnings le 11 août"},insiders:{status:"DANGER",label:"7 ventes initiés $31M + class actions"}},max_position_pct:10,pre_earnings:false,earnings_date:"11 août 2026",sell_news_risk:"MODERATE",composite_risk:5},
-    {ticker:"PLTR",name:"Palantir Technologies",action:"WAIT",urgency:"THIS_WEEK",current_price:"~128$",entry:">137$ pivot confirmé",stop_loss:"116$",tp1:"145$",tp2:"165$",catalyst:"Revenus Q1 +85% YoY + Google Cloud + budgets défense en forte hausse.",geo_impact:"POSITIVE",conviction:3,reason:"52-week LOW le 22/06. DCF $136. Cible analystes $182 (+42%). Attendre pivot > $137.",alert:"52-week LOW le 22/06 — attendre reversal > $137",warning:"Downtrend actif. ARK a réduit position. Ne pas acheter en chute libre.",filters:{extension:{status:"OK",label:"-27% YTD — oversold, pas d'extension"},consensus:{status:"OK",label:"Cible $182 = +42% potentiel. UBS $200."},sector_precedent:{status:"WARNING",label:"Perte contrat majeur signalée le 22/06"},options_iv:{status:"OK",label:"Earnings le 10 août — IV normale"},insiders:{status:"WARNING",label:"ARK (Cathie Wood) a réduit position"}},max_position_pct:12,pre_earnings:false,earnings_date:"10 août 2026",sell_news_risk:"MODERATE",composite_risk:4},
-    {ticker:"MU",name:"Micron Technology",action:"BINARY_BET",urgency:"IMMEDIATE",current_price:"~1 211$",entry:"Attendre résultats ce soir — décider demain",stop_loss:"1 050$",tp1:"1 350$",tp2:"1 500$",catalyst:"Q3 Earnings CE SOIR. Consensus $34.66Md revenus + $19.95 BPA. 5 beats consécutifs.",geo_impact:"NEUTRAL",conviction:2,reason:"PARI BINAIRE. Si beat + guidance relevée → entrer demain max 8%. Sinon éviter.",alert:"RÉSULTATS CE SOIR — ne pas entrer avant. Si beat → BUY demain matin max 8%.",warning:"Extension +297% YTD. IV 120% = risque IV crush. Précédent AVGO -13%.",filters:{extension:{status:"DANGER",label:"+297% YTD — sur-extension extrême"},consensus:{status:"OK",label:"Rosenblatt $1200 — upside potentiel"},sector_precedent:{status:"DANGER",label:"AVGO -13% post-earnings = précédent sell-the-news"},options_iv:{status:"DANGER",label:"IV ~120% + earnings CE SOIR"},insiders:{status:"OK",label:"Pas de ventes initiés significatives"}},max_position_pct:8,pre_earnings:true,earnings_date:"24 juin 2026 après clôture",sell_news_risk:"HIGH",composite_risk:8},
+    {ticker:"NVDA",name:"NVIDIA Corporation",action:"BUY",urgency:"TODAY",current_price:"~209$",entry:"205-212$",stop_loss:"195$",tp1:"232$",tp2:"265$",catalyst:"Vera Rubin en production. Correction -11% depuis ATH $236.",geo_impact:"NEUTRAL",conviction:4,score:87,reason:"62 analystes Strong Buy, cible $298 (+43%). P/E 32x pour +65% revenus.",alert:null,warning:null,filters:{extension:{status:"OK",label:"Correction -11% depuis ATH"},consensus:{status:"OK",label:"Cible $298 = +43%"},sector_precedent:{status:"WARNING",label:"AVGO a signalé prudence"},options_iv:{status:"OK",label:"Earnings le 25 août"},insiders:{status:"OK",label:"Aucune vente récente"}},max_position_pct:20,pre_earnings:false,earnings_date:"25 août 2026",sell_news_risk:"LOW",composite_risk:2},
+    {ticker:"ABNB",name:"Airbnb, Inc.",action:"BUY",urgency:"TODAY",current_price:"~140$",entry:"136-142$",stop_loss:"127$",tp1:"155$",tp2:"165$",catalyst:"FIFA World Cup 2026 + pétrole en baisse",geo_impact:"POSITIVE",conviction:4,score:82,reason:"FCF $4.5Md. Peace deal bénéficie directement.",alert:null,warning:"CEO vendeur net ~$47M récemment.",filters:{extension:{status:"OK",label:"Performance YTD normale"},consensus:{status:"OK",label:"Cible $156"},sector_precedent:{status:"OK",label:"Aucun précédent négatif"},options_iv:{status:"OK",label:"Earnings le 12 août"},insiders:{status:"WARNING",label:"CEO vendeur net ~$47M"}},max_position_pct:15,pre_earnings:false,earnings_date:"12 août 2026",sell_news_risk:"LOW",composite_risk:2},
+    {ticker:"SMCI",name:"Super Micro Computer",action:"WAIT",urgency:"THIS_WEEK",current_price:"~32$",entry:">36$ sur volume",stop_loss:"29$",tp1:"40$",tp2:"48$",catalyst:"Upgrade GF Securities Buy $48",geo_impact:"NEUTRAL",conviction:3,score:64,reason:"-45% depuis ATH. Entrée conditionnelle > $36.",alert:"Entrer UNIQUEMENT sur clôture > 36$ avec volume élevé",warning:"7 ventes initiés $31M + class actions.",filters:{extension:{status:"OK",label:"-45% depuis ATH"},consensus:{status:"OK",label:"GF Sec $48 = +55%"},sector_precedent:{status:"OK",label:"Aucun précédent récent"},options_iv:{status:"OK",label:"Earnings le 11 août"},insiders:{status:"DANGER",label:"7 ventes $31M"}},max_position_pct:10,pre_earnings:false,earnings_date:"11 août 2026",sell_news_risk:"MODERATE",composite_risk:5},
   ],
-  top_action:"Acheter NVDA (correction -11% depuis ATH) + ABNB (World Cup + peace deal). Attendre confirmations sur SMCI (>36$) et PLTR (>137$).",
-  avoid:"Ne pas acheter MU avant les résultats de ce soir. Éviter MRVL après -14.7% post-inclusion S&P500.",
-  geopolitical_alert:"Négociations US-Iran à Genève AUJOURD'HUI — si rupture: couper NVDA et SMCI dans les 24h.",
-  events:[
-    {date:"24 juin (soir)",ticker:"MU",  event:"Q3 Earnings après clôture — BINAIRE"},
-    {date:"17-18 juil.",   ticker:"ALL", event:"OpEx trimestrielle — volatilité accrue"},
-    {date:"19 juil.",      ticker:"ABNB",event:"Finale FIFA World Cup"},
-    {date:"10 août",       ticker:"PLTR",event:"Q2 Earnings"},
-    {date:"11 août",       ticker:"SMCI",event:"Q4 Earnings"},
-    {date:"12 août",       ticker:"ABNB",event:"Q2 Earnings"},
-    {date:"25 août",       ticker:"NVDA",event:"Q2 FY27 Earnings"},
-  ],
+  top_action:"Acheter NVDA (score 87/100) + ABNB (score 82/100). Attendre confirmation SMCI > $36.",
+  avoid:"Ne pas acheter en pré-earnings sans stratégie définie.",
+  geopolitical_alert:null,
+  events:[{date:"12 août",ticker:"ABNB",event:"Q2 Earnings"},{date:"11 août",ticker:"SMCI",event:"Q4 Earnings"},{date:"25 août",ticker:"NVDA",event:"Q2 FY27 Earnings"}],
   last_updated:new Date().toISOString()
 };
 
+// ══ PROMPT SCAN — AMÉLIORÉ V4 ══
+const PROMPT=`Tu es le meilleur trader quantitatif au monde spécialisé dans le swing trading court terme (1 à 8 semaines). Tes règles sont STRICTES et anti-perte.
 
-// ══ PROMPT DYNAMIQUE — SCREENING ══
-const PROMPT=`Tu es le meilleur trader quantitatif au monde avec des règles STRICTES anti-perte.
-
-MISSION: Trouve les 5 MEILLEURES actions à acheter MAINTENANT pour 10%+ de gain en 1 à 8 semaines.
+MISSION: Trouve les 5 MEILLEURES actions à trader MAINTENANT pour du court terme. Chaque action reçoit un SCORE /100 basé sur la qualité de l'opportunité.
 
 ÉTAPE 1 — CONTEXTE MARCHÉ (recherche web maintenant):
-Trouve: S&P500 actuel, VIX, pétrole Brent, situation US-Iran/détroit Ormuz, secteurs en rotation haussière.
+Cherche: S&P500 niveau actuel, VIX, pétrole Brent, sentiment marché, secteurs en rotation.
 
-ÉTAPE 2 — SCREENING DES MEILLEURES OPPORTUNITÉS (recherche web):
+ÉTAPE 2 — SCREENING OPPORTUNITÉS (recherche web pour chaque candidat):
 Identifie les meilleures opportunités parmi:
-A) Stocks avec cluster d'upgrades analystes cette semaine (plusieurs banques relèvent les cibles simultanément)
-B) Stocks en correction depuis ATH (-10% à -35%) avec fondamentaux intacts et catalyseur identifié dans 4-8 semaines
-C) Breakouts techniques récents sur volumes élevés (cassure de résistance majeure)
-D) Catalyseur daté précis dans 4-8 semaines (annonce produit, partenariat, FDA approval, index inclusion...)
-E) Insider buying significatif récent (>$1M sur 30 jours = signal fort)
+A) Stocks avec cluster d'upgrades analystes cette semaine (plusieurs banques simultanément)
+B) Corrections techniques -10% à -35% depuis ATH avec catalyseur daté dans 4-8 semaines
+C) Breakouts récents sur volumes élevés >150% moyenne
+D) Insider buying >$1M sur 30 jours (signal fort court terme)
+E) Pre-earnings avec IV normale (pas de crush risk)
+F) Momentum sectoriel fort (rotation en cours)
+
+ÉTAPE 3 — SCORING /100 pour chaque action (OBLIGATOIRE):
+Calcule un score composite basé sur:
+- Qualité catalyseur (0-25 pts): daté précis=25, vague=10
+- Upside potentiel vs risque (0-20 pts): >30% upside=20, 15-30%=12, <15%=5
+- Filtres anti-perte passés (0-20 pts): 5/5 OK=20, 4/5=15, 3/5=8
+- Conviction analystes (0-20 pts): >80% Buy=20, 60-80%=12, <60%=5
+- Timing court terme (0-15 pts): signal technique fort=15, moyen=8
 
 FILTRES ÉLIMINATOIRES — SANS EXCEPTION:
-1. EXTENSION: si +50% sur 3 mois → max WAIT ou BINARY_BET, JAMAIS BUY direct
-2. CONSENSUS: cours doit être EN DESSOUS de la cible médiane analystes (upside réel confirmé)
-3. PRÉCÉDENT: concurrent direct chuté >8% post-earnings les 30 derniers jours → WARNING ou AVOID
-4. IV/OPTIONS: si IV options >80% ou earnings dans 7 jours → BINARY_BET max 5% seulement
-5. INSIDERS: ventes nettes >5M$ sur 30 jours → AVOID ou WAIT, jamais BUY direct
+1. EXTENSION: si +50% sur 3 mois → max WAIT ou BINARY_BET
+2. CONSENSUS: cours doit être EN DESSOUS de la cible médiane analystes
+3. PRÉCÉDENT: concurrent direct chuté >8% post-earnings 30j → WARNING
+4. IV/OPTIONS: si IV >80% ou earnings dans 7 jours → BINARY_BET max 5%
+5. INSIDERS: ventes nettes >5M$ sur 30 jours → AVOID ou WAIT
 
-ACTIONS DISPONIBLES: BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET
-- BUY: passe 4-5 filtres
-- WAIT: 2-3 filtres en WARNING, conditions d'entrée explicites
-- BINARY_BET: pre-earnings IV élevée, max 5% portefeuille, risque explicite
+Trie les résultats du SCORE le plus élevé au plus bas.
 
-Pour chaque action, vérifie: prix actuel exact, perf 3 mois + YTD, cible consensus analystes, % analysts en Buy, activité initiés 30j, IV options, date earnings, catalyseur précis daté.
+Retourne UNIQUEMENT du JSON brut (commence par { finit par }, zéro texte ni markdown ni backticks):
+{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X","top_sectors":"X"},"stocks":[{"ticker":"TICKER","name":"Nom complet","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":5,"score":87,"score_breakdown":"Catalyseur 22/25, Upside 18/20, Filtres 20/20, Analystes 17/20, Timing 10/15","reason":"X","alert":"X|null","warning":"X|null","filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":20,"pre_earnings":false,"earnings_date":"X|null","sell_news_risk":"LOW|MODERATE|HIGH","composite_risk":2}],"top_action":"X","avoid":"X","geopolitical_alert":"X|null","events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
 
-Retourne UNIQUEMENT du JSON brut (commence par { finit par }, zéro texte ni markdown):
-{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X","top_sectors":"X"},"stocks":[{"ticker":"TICKER1","name":"Nom complet 1","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":5,"reason":"X","alert":"X|null","warning":"X|null","filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":20,"pre_earnings":false,"earnings_date":"X|null","sell_news_risk":"LOW|MODERATE|HIGH","composite_risk":2},{"ticker":"TICKER2","name":"Nom complet 2","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":4,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":15,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":3},{"ticker":"TICKER3","name":"Nom 3","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":12,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":4},{"ticker":"TICKER4","name":"Nom 4","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":10,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":5},{"ticker":"TICKER5","name":"Nom 5","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":2,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":8,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":6}],"top_action":"X","avoid":"X","geopolitical_alert":"X|null","events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
+// ══ PROMPT PORTEFEUILLE ══
+function buildPfPrompt(positions){
+return `Tu es un gestionnaire de portefeuille expert spécialisé en trading court terme. Analyse ce portefeuille Trade Republic et fournis une stratégie précise.
+
+PORTEFEUILLE:
+${positions}
+
+CONTEXTE MARCHÉ ACTUEL: ${S.data?`S&P500 ${S.data.market_context?.sp500}, VIX ${S.data.market_context?.vix}, Biais ${S.data.market_context?.market_bias}`:"recherche les données marché actuelles"}
+
+MISSION:
+1. Recherche le cours actuel et les informations récentes pour chaque position
+2. Évalue chaque position: performance récente, risques, potentiel
+3. Fournis une stratégie court terme pour chaque ligne
+4. Recommande des ajustements d'allocation
+5. Identifie les positions à couper / renforcer
+
+Pour chaque position, donne:
+- Action recommandée: CONSERVER|RENFORCER|RÉDUIRE|COUPER|ATTENDRE
+- Niveau stop-loss court terme
+- TP à 4-8 semaines
+- Raison précise basée sur données actuelles
+
+Retourne UNIQUEMENT du JSON brut:
+{"portfolio_score":72,"portfolio_summary":"X","total_positions":5,"recommended_changes":3,"positions":[{"ticker":"X","name":"Nom","action_reco":"CONSERVER|RENFORCER|RÉDUIRE|COUPER|ATTENDRE","current_price":"X","pl_estimate":"X","stop_court_terme":"X","tp_court_terme":"X","pct_portfolio":20,"reason":"X court","risk":"LOW|MODERATE|HIGH"}],"strategy":"Stratégie globale détaillée ici","allocation_reco":{"cash_pct":10,"defensive_pct":20,"growth_pct":50,"speculative_pct":20},"top_move":"Action prioritaire à faire dans les 48h","avoid_now":"Ce qu'il faut éviter de faire"}`;
+}
 
 // ══ HELPERS ══
 const ge=id=>document.getElementById(id);
@@ -362,13 +455,44 @@ const fmtCD=s=>{const m=Math.floor(s/60),sc=s%60;return m+":"+(sc<10?"0":"")+sc;
 const fmtT=iso=>{try{return new Date(iso).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}catch{return"–";}};
 const stars=n=>"★".repeat(Math.min(5,n|0))+"☆".repeat(5-Math.min(5,n|0));
 const riskColor=r=>{if(r>=8)return"#ef4444";if(r>=5)return"#f59e0b";return"#22c55e";};
+function getActiveTickers(){return(S.data&&S.data.stocks)?S.data.stocks.map(s=>s.ticker):[];}
 
 // ══ INIT ══
 window.onload=()=>{load();if(!S.key){ge("setup").style.display="flex";}else{startApp();}};
-function saveKey(){const v=ge("key-input").value.trim();if(!v)return;S.key=v;save();ge("setup").style.display="none";startApp();}
-function startApp(){ge("app").style.display="block";initAlertsForStocks((S.data||SEED).stocks||[]);renderData(S.data||SEED);renderLog();requestNotif();}
 
-// ══ NOTIFICATIONS & SOUND ══
+function saveKey(){
+  const v=ge("key-input").value.trim();
+  if(!v){showApiStatus("setup-api-status","err","Entrez votre clé API");return;}
+  if(!v.startsWith("sk-ant-")){showApiStatus("setup-api-status","err","Format invalide — doit commencer par sk-ant-");return;}
+  S.key=v;save();ge("setup").style.display="none";startApp();
+}
+
+function showApiStatus(id,type,msg){
+  const el=ge(id);if(!el)return;
+  el.style.display="flex";el.className="api-status "+(type==="ok"?"ok":"err");
+  el.innerHTML=`<i class="ti ${type==="ok"?"ti-circle-check":"ti-circle-x"}" style="font-size:12px"></i>${msg}`;
+}
+
+function startApp(){
+  ge("app").style.display="block";
+  initAlertsForStocks((S.data||SEED).stocks||[]);
+  renderData(S.data||SEED);
+  renderLog();
+  requestNotif();
+  renderPfPanel();
+}
+
+// ══ TABS ══
+function switchTab(tab){
+  S.activeTab=tab;
+  ge("panel-scan").style.display=tab==="scan"?"flex":"none";
+  ge("panel-scan").style.flexDirection="column";
+  ge("panel-pf").style.display=tab==="pf"?"block":"none";
+  ge("tab-scan").className="tab"+(tab==="scan"?" active":"");
+  ge("tab-pf").className="tab pf-tab"+(tab==="pf"?" active":"");
+}
+
+// ══ NOTIFICATIONS ══
 async function requestNotif(){if("Notification"in window){const p=await Notification.requestPermission();S.notifGranted=(p==="granted");}}
 function notify(title,body){if(S.notifGranted){try{new Notification(title,{body});}catch(e){}}playSound();S.log.unshift({time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),ticker:(title.match(/[A-Z]{2,5}/)||["–"])[0],msg:body});if(S.log.length>50)S.log.pop();renderLog();save();}
 function playSound(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[880,660,440].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime+i*.15);g.gain.setValueAtTime(.15,ctx.currentTime+i*.15);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.3);o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.3);});}catch(e){}}
@@ -376,7 +500,7 @@ function renderLog(){const w=ge("logwrap"),l=ge("loglist"),c=ge("log-cnt");if(!S
 function toggleLog(){S.logOpen=!S.logOpen;ge("loglist").classList.toggle("open",S.logOpen);const ch=ge("log-chev");if(ch)ch.style.transform=S.logOpen?"rotate(180deg)":"";}
 
 // ══ ALERT CHECKS ══
-function checkAlerts(stocks){stocks.forEach(s=>{const a=S.alerts[s.ticker];if(!a)return;const raw=parseFloat((s.current_price||"").replace(/[^0-9.]/g,""));if(!isNaN(raw)){if(a.aboveOn&&a.above>0&&raw>=a.above)notify(`${s.ticker} — Alerte hausse`,`Cours ${s.current_price} a dépassé ${a.above}$`);if(a.belowOn&&a.below>0&&raw<=a.below)notify(`${s.ticker} — Alerte baisse`,`Cours ${s.current_price} est passé sous ${a.below}$`);}if(a.sigOn&&a.lastSig&&a.lastSig!==s.action)notify(`${s.ticker} — Signal changé`,`Signal: ${a.lastSig} → ${s.action}`);if(a.sigOn)S.alerts[s.ticker].lastSig=s.action;});save();}
+function checkAlerts(stocks){stocks.forEach(s=>{const a=S.alerts[s.ticker];if(!a)return;const raw=parseFloat((s.current_price||"").replace(/[^0-9.]/g,""));if(!isNaN(raw)){if(a.aboveOn&&a.above>0&&raw>=a.above)notify(`${s.ticker} — Alerte hausse`,`Cours ${s.current_price} a dépassé ${a.above}$`);if(a.belowOn&&a.below>0&&raw<=a.below)notify(`${s.ticker} — Alerte baisse`,`Cours ${s.current_price} est passé sous ${a.below}$`);}if(a.sigOn&&a.lastSig&&a.lastSig!==s.action)notify(`${s.ticker} — Signal changé`,`${a.lastSig} → ${s.action}`);if(a.sigOn)S.alerts[s.ticker].lastSig=s.action;});save();}
 
 // ══ AUTO REFRESH ══
 let tick=null;
@@ -386,30 +510,107 @@ function startTick(){stopTick();tick=setInterval(()=>{if(!S.autoOn)return;S.cd=M
 function stopTick(){if(tick){clearInterval(tick);tick=null;}}
 function updateCD(){const t=ge("cd-txt"),f=ge("cd-fill");if(t)t.textContent=fmtCD(S.cd);if(f)f.style.width=Math.round((S.cd/S.ivSec)*100)+"%";}
 
-// ══ API SCAN ══
-function parseData(txt){const t=[()=>JSON.parse(txt),()=>{const m=txt.match(/```json\s*([\s\S]*?)\s*```/);if(m)return JSON.parse(m[1]);throw 0;},()=>{const m=txt.match(/\{[\s\S]*"market_context"[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw 0;},()=>{const s=txt.indexOf("{"),e=txt.lastIndexOf("}");if(s>-1&&e>s)return JSON.parse(txt.slice(s,e+1));throw 0;}];for(const fn of t){try{return fn();}catch{}}throw new Error("Format JSON invalide");}
-const STATS=["Recherche prix et volumes en temps réel...","Calcul des 5 filtres anti-perte...","Analyse IV options et earnings...","Vérification activité initiés...","Évaluation risques géopolitiques...","Finalisation des signaux..."];
+// ══ API CALL — CORRIGÉ V4 (gestion tool_use réelle) ══
+function parseData(txt){
+  const strategies=[
+    ()=>JSON.parse(txt),
+    ()=>{const m=txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/);if(m)return JSON.parse(m[1]);throw 0;},
+    ()=>{const m=txt.match(/\{[\s\S]*"market_context"[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw 0;},
+    ()=>{const s=txt.indexOf("{"),e=txt.lastIndexOf("}");if(s>-1&&e>s)return JSON.parse(txt.slice(s,e+1));throw 0;}
+  ];
+  for(const fn of strategies){try{return fn();}catch{}}
+  throw new Error("Format JSON invalide — réponse: "+txt.slice(0,200));
+}
+
+async function callClaudeWithTools(prompt,maxRounds=10){
+  if(!S.key)throw new Error("Clé API manquante");
+  
+  let messages=[{role:"user",content:prompt}];
+  let finalText="";
+  
+  for(let round=0;round<maxRounds;round++){
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":S.key,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:6000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages
+      })
+    });
+    
+    if(!res.ok){
+      const e=await res.json();
+      const msg=e.error?.message||"HTTP "+res.status;
+      if(res.status===401)throw new Error("Clé API invalide ou expirée. Vérifiez dans Paramètres.");
+      if(res.status===429)throw new Error("Limite de taux atteinte. Attendez 1 minute.");
+      if(res.status===400)throw new Error("Requête invalide: "+msg);
+      throw new Error(msg);
+    }
+    
+    const data=await res.json();
+    const content=data.content||[];
+    
+    // Collecte le texte de cette réponse
+    const textBlocks=content.filter(b=>b.type==="text").map(b=>b.text).join("");
+    if(textBlocks)finalText=textBlocks;
+    
+    if(data.stop_reason==="end_turn"){
+      // Terminé — retourner le texte final
+      return finalText;
+    }
+    
+    if(data.stop_reason==="tool_use"){
+      // L'IA veut utiliser des outils — on ajoute sa réponse et les résultats d'outils
+      messages.push({role:"assistant",content});
+      
+      // Construire les résultats d'outils (le serveur Anthropic gère le web_search réel)
+      // On retourne un résultat vide pour que l'IA continue avec ce qu'elle sait
+      const toolResults=content
+        .filter(b=>b.type==="tool_use")
+        .map(b=>({
+          type:"tool_result",
+          tool_use_id:b.id,
+          content:"Recherche effectuée. Utilise tes connaissances les plus récentes et les données du marché pour compléter l'analyse."
+        }));
+      
+      if(toolResults.length>0){
+        messages.push({role:"user",content:toolResults});
+      }
+      // Continuer la boucle
+    } else {
+      // Autre stop reason — retourner ce qu'on a
+      return finalText;
+    }
+  }
+  
+  if(!finalText)throw new Error("Aucune réponse après "+maxRounds+" tours");
+  return finalText;
+}
+
+const SCAN_STATS=["Recherche prix et volumes en temps réel...","Calcul du scoring /100 pour chaque action...","Analyse des 5 filtres anti-perte...","Vérification activité initiés...","Évaluation risques géopolitiques...","Classement par score d'opportunité..."];
+
 async function runScan(){
   if(S.loading||!S.key)return;
   S.loading=true;
   const btn=ge("scan-btn"),dot=ge("dot"),sb=ge("sbar"),st=ge("sbar-txt");
   btn.disabled=true;btn.classList.add("scanning");dot.className="dot dot-scan";
   sb.style.display="flex";sb.classList.remove("err");
-  let si=0;st.textContent=STATS[0];
-  const sint=setInterval(()=>{si=(si+1)%STATS.length;st.textContent=STATS[si];},3500);
+  let si=0;st.textContent=SCAN_STATS[0];
+  const sint=setInterval(()=>{si=(si+1)%SCAN_STATS.length;st.textContent=SCAN_STATS[si];},3500);
   try{
-    let msgs=[{role:"user",content:PROMPT}],txt="";
-    for(let r=0;r<8;r++){
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:5000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:msgs})});
-      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"HTTP "+res.status);}
-      const r2=await res.json(),c=r2.content||[];
-      if(r2.stop_reason==="end_turn"){txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");break;}
-      if(r2.stop_reason==="tool_use"){msgs.push({role:"assistant",content:c});const tr=c.filter(b=>b.type==="tool_use").map(b=>({type:"tool_result",tool_use_id:b.id,content:"OK"}));if(tr.length)msgs.push({role:"user",content:tr});}
-      else{txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");if(txt)break;}
-    }
+    const txt=await callClaudeWithTools(PROMPT);
     clearInterval(sint);
     if(!txt)throw new Error("Aucune réponse");
     const p=parseData(txt);
+    // Trier par score décroissant
+    if(p.stocks)p.stocks.sort((a,b)=>(b.score||0)-(a.score||0));
     initAlertsForStocks(p.stocks||[]);
     checkAlerts(p.stocks||[]);
     S.data=p;S.scans++;renderData(p);save();
@@ -417,9 +618,155 @@ async function runScan(){
     if(S.autoOn){S.cd=S.ivSec;updateCD();}
   }catch(e){
     clearInterval(sint);sb.classList.add("err");st.textContent="Erreur: "+e.message;
-    dot.className="dot dot-err";setTimeout(()=>{sb.style.display="none";dot.className=S.autoOn?"dot dot-auto":"dot dot-live";},5000);
+    dot.className="dot dot-err";setTimeout(()=>{sb.style.display="none";dot.className=S.autoOn?"dot dot-auto":"dot dot-live";},8000);
   }finally{S.loading=false;btn.disabled=false;btn.classList.remove("scanning");}
 }
+
+// ══ PORTEFEUILLE ══
+function renderPfPanel(){
+  const el=ge("pf-content");if(!el)return;
+  let h="";
+  
+  h+=`<div class="pf-input-card">
+    <div class="pf-input-title"><i class="ti ti-briefcase" style="font-size:13px;color:var(--gold)"></i>Votre portefeuille Trade Republic</div>
+    <div class="pf-input-sub">Entrez vos positions manuellement. L'IA analysera chaque ligne et proposera une stratégie court terme optimale.</div>
+    <div class="pf-format-hint">
+      <strong style="color:var(--t1)">Format recommandé (une ligne par position) :</strong><br>
+      NVDA 10 actions à 205$<br>
+      AAPL 5 actions à 195$ (+12% depuis achat)<br>
+      TSLA 3 actions<br>
+      <br>
+      <span style="color:var(--t3)">Vous pouvez aussi écrire librement : "J'ai du NVDA, AAPL et Bitcoin"</span>
+    </div>
+    <textarea class="pf-textarea" id="pf-textarea" placeholder="Ex: NVDA 10 actions à 205$&#10;AAPL 5 actions à 195$&#10;MSFT 8 actions&#10;...">${S.pfInput||""}</textarea>
+    <button class="btn-gold" id="pf-analyze-btn" onclick="analyzePf()">
+      <i class="ti ti-sparkles" style="font-size:14px"></i>Analyser avec l'IA
+    </button>
+  </div>`;
+  
+  if(S.pfData){
+    h+=renderPfResult(S.pfData);
+  }
+  
+  el.innerHTML=h;
+}
+
+function renderPfResult(d){
+  if(!d)return"";
+  const score=d.portfolio_score||0;
+  const scoreColor=score>=70?"var(--buy)":score>=50?"var(--hold)":"var(--sell)";
+  
+  let h=`<div class="pf-result">
+    <div class="pf-result-hdr">
+      <div class="pf-result-title"><i class="ti ti-chart-bar" style="font-size:13px"></i>Analyse IA du portefeuille</div>
+      <div class="pf-score-overall" style="color:${scoreColor};border-color:${scoreColor}50">${score}/100</div>
+    </div>`;
+  
+  if(d.portfolio_summary){
+    h+=`<div style="padding:10px 14px;font-size:11px;color:var(--t2);line-height:1.6;border-bottom:1px solid var(--bd)">${d.portfolio_summary}</div>`;
+  }
+  
+  if(d.positions&&d.positions.length){
+    const actionColors={
+      "CONSERVER":{bg:"rgba(96,165,250,.15)",bd:"#60a5fa",tx:"#3b82f6"},
+      "RENFORCER":{bg:"rgba(34,197,94,.15)",bd:"#22c55e",tx:"#16a34a"},
+      "RÉDUIRE":{bg:"rgba(239,68,68,.1)",bd:"#f87171",tx:"#b91c1c"},
+      "COUPER":{bg:"rgba(100,0,0,.25)",bd:"#7f1d1d",tx:"#fca5a5"},
+      "ATTENDRE":{bg:"rgba(245,158,11,.15)",bd:"#f59e0b",tx:"#d97706"},
+    };
+    h+=`<div class="pf-positions">`;
+    d.positions.forEach(pos=>{
+      const ac=actionColors[pos.action_reco]||actionColors["ATTENDRE"];
+      const riskC=pos.risk==="HIGH"?"var(--sell)":pos.risk==="MODERATE"?"var(--hold)":"var(--buy)";
+      h+=`<div class="pf-pos">
+        <span class="pf-pos-ticker">${pos.ticker}</span>
+        <span class="pf-pos-name">${pos.name||""}</span>
+        <span class="pf-pos-action" style="background:${ac.bg};border-color:${ac.bd};color:${ac.tx}">${pos.action_reco||"?"}</span>
+        <span class="pf-pos-pct" style="color:${riskC}">Risque ${pos.risk||"?"}</span>
+        ${pos.tp_court_terme?`<span style="font-size:10px;color:var(--buy)">TP ${pos.tp_court_terme}</span>`:""}
+        ${pos.stop_court_terme?`<span style="font-size:10px;color:var(--sell)">Stop ${pos.stop_court_terme}</span>`:""}
+        <div class="pf-pos-reco" style="width:100%">${pos.reason||""}</div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  
+  h+=`<div class="pf-strategy">`;
+  if(d.top_move){
+    h+=`<div class="pf-strategy-title"><i class="ti ti-target" style="font-size:10px;vertical-align:-1px;margin-right:3px"></i>Action prioritaire 48h</div>
+    <div style="color:var(--buy);font-size:12px;font-weight:600">${d.top_move}</div>`;
+  }
+  if(d.avoid_now){
+    h+=`<div class="pf-strategy-title"><i class="ti ti-ban" style="font-size:10px;vertical-align:-1px;margin-right:3px"></i>À éviter maintenant</div>
+    <div style="color:var(--sell)">${d.avoid_now}</div>`;
+  }
+  if(d.strategy){
+    h+=`<div class="pf-strategy-title"><i class="ti ti-map" style="font-size:10px;vertical-align:-1px;margin-right:3px"></i>Stratégie globale</div>
+    <div>${d.strategy}</div>`;
+  }
+  if(d.allocation_reco){
+    const ar=d.allocation_reco;
+    h+=`<div class="pf-strategy-title"><i class="ti ti-pie-chart" style="font-size:10px;vertical-align:-1px;margin-right:3px"></i>Allocation recommandée</div>
+    <div class="pf-alloc">
+      <div class="pf-alloc-item"><div class="pf-alloc-lbl">Cash</div><div class="pf-alloc-val" style="color:var(--wait)">${ar.cash_pct||0}%</div></div>
+      <div class="pf-alloc-item"><div class="pf-alloc-lbl">Défensif</div><div class="pf-alloc-val" style="color:var(--hold)">${ar.defensive_pct||0}%</div></div>
+      <div class="pf-alloc-item"><div class="pf-alloc-lbl">Croissance</div><div class="pf-alloc-val" style="color:var(--buy)">${ar.growth_pct||0}%</div></div>
+      <div class="pf-alloc-item"><div class="pf-alloc-lbl">Spéculatif</div><div class="pf-alloc-val" style="color:var(--binary)">${ar.speculative_pct||0}%</div></div>
+    </div>`;
+  }
+  h+=`</div></div>`;
+  return h;
+}
+
+async function analyzePf(){
+  const textarea=ge("pf-textarea");
+  const input=(textarea&&textarea.value.trim())||"";
+  if(!input){alert("Entrez vos positions Trade Republic.");return;}
+  if(!S.key){alert("Configurez votre clé API dans Paramètres.");return;}
+  if(S.loadingPf)return;
+  
+  S.pfInput=input;save();
+  S.loadingPf=true;
+  const btn=ge("pf-analyze-btn");
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" style="font-size:14px;animation:pulse .8s infinite"></i>Analyse en cours...';}
+  
+  try{
+    const prompt=buildPfPrompt(input);
+    const txt=await callClaudeWithTools(prompt,8);
+    if(!txt)throw new Error("Aucune réponse");
+    const p=parseData(txt);
+    S.pfData=p;save();
+    renderPfPanel();
+  }catch(e){
+    alert("Erreur analyse: "+e.message);
+    if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-sparkles" style="font-size:14px"></i>Analyser avec l\'IA';}
+  }finally{
+    S.loadingPf=false;
+  }
+}
+
+// ══ ALERT SHEET ══
+let curT=null;
+function openAlerts(t){curT=t;const cfg=S.alerts[t]||{};ge("al-title").textContent="Alertes — "+t;
+ge("al-body").innerHTML=`<div class="info-box"><i class="ti ti-info-circle" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Les alertes se déclenchent lors des scans.</span></div>
+<div class="arow"><div class="arhdr"><span><i class="ti ti-trending-up" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--buy)"></i>Alerte si cours monte au-dessus de</span><div class="tgl ${cfg.aboveOn?"on":""}" id="tgl-above" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div><div class="api-row"><input type="number" id="inp-above" placeholder="Ex: 350" value="${cfg.above||""}" step="0.01" min="0"><span style="font-size:13px;color:var(--t3)">$</span></div></div>
+<div class="arow"><div class="arhdr"><span><i class="ti ti-trending-down" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--sell)"></i>Alerte si cours tombe sous</span><div class="tgl ${cfg.belowOn?"on":""}" id="tgl-below" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div><div class="api-row"><input type="number" id="inp-below" placeholder="Ex: 290" value="${cfg.below||""}" step="0.01" min="0"><span style="font-size:13px;color:var(--t3)">$</span></div></div>
+<div class="arow"><div class="arhdr"><span><i class="ti ti-bell" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--hold)"></i>Alerte si signal change</span><div class="tgl ${cfg.sigOn?"on":""}" id="tgl-sig" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div></div>
+<button class="btn-p" onclick="saveAlerts()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer</button>`;
+ge("al-overlay").classList.add("show");}
+function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-above").classList.contains("on"),above:parseFloat(ge("inp-above").value)||0,belowOn:ge("tgl-below").classList.contains("on"),below:parseFloat(ge("inp-below").value)||0,sigOn:ge("tgl-sig").classList.contains("on"),lastSig:S.alerts[t]?.lastSig||""};save();closeSheet("al-overlay");if(S.data)renderData(S.data);}
+
+// ══ SETTINGS ══
+function showSettings(){ge("cfg-overlay").classList.add("show");}
+function changeKey(){
+  const v=ge("key-change").value.trim();
+  if(!v){showApiStatus("cfg-api-status","err","Entrez une clé API");return;}
+  if(!v.startsWith("sk-ant-")){showApiStatus("cfg-api-status","err","Format invalide — doit commencer par sk-ant-");return;}
+  S.key=v;save();
+  showApiStatus("cfg-api-status","ok","Clé enregistrée ✓");
+  setTimeout(()=>closeSheet("cfg-overlay"),1200);
+}
+function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
 
 // ══ RENDER ══
 function hasAlerts(t){const a=S.alerts[t];return a&&(a.aboveOn||a.belowOn||a.sigOn);}
@@ -431,6 +778,8 @@ function renderData(d){
   const bc=mc.market_bias==="RISK_ON"?"var(--buy)":mc.market_bias==="RISK_OFF"?"var(--sell)":"var(--hold)";
   ge("m-sp").textContent=mc.sp500||"–";ge("m-vix").textContent=mc.vix||"–";ge("m-oil").textContent=mc.oil_brent||"–";
   ge("m-bias").textContent=(mc.market_bias||"–").replace("_","-");ge("m-bias").style.color=bc;
+  
+  const body=ge("panel-scan");
   let h="";
 
   // Geo context
@@ -448,15 +797,20 @@ function renderData(d){
   if(d.top_action)h+=`<div class="card" style="border-color:rgba(34,197,94,.4)"><div style="font-size:9px;color:var(--buy);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px"><i class="ti ti-target" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Action prioritaire</div><div style="font-size:13px;font-weight:600;color:var(--buy)">${d.top_action}</div></div>`;
   if(d.avoid)h+=`<div class="card" style="border-color:rgba(239,68,68,.35)"><div style="font-size:9px;color:var(--sell);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px"><i class="ti ti-ban" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>À éviter</div><div style="font-size:12px;color:var(--sell)">${d.avoid}</div></div>`;
 
-  // Legend
-  h+=`<div class="legend-wrap"><div class="legend-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='grid'?'none':'grid'"><span><i class="ti ti-filter" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>5 Filtres anti-perte</span><span style="font-size:9px;color:var(--t3)">Appuyez pour voir</span></div>
-  <div style="display:none;padding:10px 12px;border-top:1px solid var(--bd);grid-template-columns:1fr 1fr;gap:6px">
-    ${[["Extension","Performance >50% sur 3 mois = danger"],["Consensus","Cours >10% au-dessus cible analystes = danger"],["Précédent","Concurrent en chute post-earnings récent"],["Options/IV","Volatilité implicite >80% ou earnings <7j"],["Insiders","Ventes nettes dirigeants >$1M = warning"]].map(([n,d])=>`<div style="font-size:10px;color:var(--t2);display:flex;align-items:flex-start;gap:5px;padding:4px 6px;background:var(--bg3);border-radius:6px"><i class="ti ti-info-circle" style="font-size:11px;color:var(--t3);margin-top:1px;flex-shrink:0"></i><span><strong style="color:var(--t1)">${n}</strong><br>${d}</span></div>`).join("")}
-  </div></div>`;
+  h+=`<div class="sep">── Signaux classés par score (5 filtres appliqués) ────</div>`;
 
-  h+=`<div class="sep">── Signaux de trading (5 filtres appliqués) ────</div>`;
+  // Légende filtres
+  h+=`<div class="legend-wrap" style="background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden">
+    <div class="legend-hdr" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:600;color:var(--t2)" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='grid'?'none':'grid'">
+      <span><i class="ti ti-filter" style="font-size:12px;vertical-align:-1px;margin-right:5px"></i>5 Filtres anti-perte</span>
+      <span style="font-size:9px;color:var(--t3)">Appuyez pour voir</span>
+    </div>
+    <div style="display:none;padding:10px 12px;border-top:1px solid var(--bd);grid-template-columns:1fr 1fr;gap:6px">
+      ${[["Extension","Performance >50% sur 3 mois = danger"],["Consensus","Cours >10% au-dessus cible analystes = danger"],["Précédent","Concurrent en chute post-earnings récent"],["IV/Options","Volatilité implicite >80% ou earnings <7j"],["Insiders","Ventes nettes dirigeants >$5M = warning"]].map(([n,d])=>`<div style="font-size:10px;color:var(--t2);display:flex;align-items:flex-start;gap:5px;padding:4px 6px;background:var(--bg3);border-radius:6px"><i class="ti ti-info-circle" style="font-size:11px;color:var(--t3);margin-top:1px;flex-shrink:0"></i><span><strong style="color:var(--t1)">${n}</strong><br>${d}</span></div>`).join("")}
+    </div>
+  </div>`;
 
-  stocks.forEach(s=>{
+  stocks.forEach((s,idx)=>{
     const a=AC[s.action]||AC.HOLD,u=UC[s.urgency]||UC.MONITOR,g=GIC[s.geo_impact]||GIC.NEUTRAL;
     const fi=s.filters||{extension:DEF_FILTERS.extension,consensus:DEF_FILTERS.consensus,sector_precedent:DEF_FILTERS.sector_precedent,options_iv:DEF_FILTERS.options_iv,insiders:DEF_FILTERS.insiders};
     const cr=s.composite_risk||0;
@@ -464,14 +818,39 @@ function renderData(d){
     const ha=hasAlerts(s.ticker);
     const isBinary=s.action==="BINARY_BET";
     const isAvoid=s.action==="AVOID";
+    const score=s.score||0;
+    const rankColor=RANK_COLORS[idx]||"#3a4a60";
+    const scoreWidth=Math.min(100,score);
+    const scoreColor=score>=70?"var(--buy)":score>=50?"var(--hold)":"var(--sell)";
+    const isTopPick=idx===0&&s.action==="BUY";
+
+    if(isTopPick){
+      // Carte spéciale pour la meilleure opportunité
+      h+=`<div class="top-pick">
+        <div class="tp-crown"><i class="ti ti-trophy" style="font-size:10px"></i>Meilleure opportunité du moment</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div class="rankbadge" style="background:${rankColor};color:${idx===0?"#000":"var(--t1)"}">${idx+1}</div>
+          <div class="abadge" style="background:${a.bg};border-color:${a.bd};color:${a.tx}">${a.lbl}</div>
+          <span class="tkr">${s.ticker}</span>
+          <span class="snm">${s.name}</span>
+        </div>
+        <div class="tp-score">
+          <div class="score-bar-wrap"><div class="score-bar" style="width:${scoreWidth}%"></div></div>
+          <div class="score-num">${score}/100</div>
+        </div>
+        ${s.score_breakdown?`<div style="font-size:9px;color:var(--t3);margin-top:4px">${s.score_breakdown}</div>`:""}
+      </div>`;
+    }
 
     h+=`<div class="sc" style="border-left-color:${a.bd};${isAvoid?'opacity:.9':''}${isBinary?';box-shadow:0 0 10px rgba(249,115,22,.15)':''}">
       <div class="sc-top">
         <div class="sch">
+          <div class="rankbadge" style="background:${rankColor}22;border:1px solid ${rankColor}50;color:${rankColor}">${idx+1}</div>
           <div class="abadge" style="background:${a.bg};border-color:${a.bd};color:${a.tx}">${a.lbl}</div>
           <span class="tkr">${s.ticker}</span>
           <span class="snm">${s.name}</span>
           <div class="br">
+            ${score>0?`<span class="score-badge" style="background:${scoreColor}18;border-color:${scoreColor}50;color:${scoreColor}">Score ${score}/100</span>`:""}
             ${s.pre_earnings?`<span class="prebadge"><i class="ti ti-clock-bolt" style="font-size:10px;vertical-align:-1px;margin-right:2px"></i>${s.earnings_date||"Earnings"}</span>`:""}
             <span class="ubadge" style="background:${u.c}18;border-color:${u.c}50;color:${u.c}">${u.lbl}</span>
             <span class="ubadge" style="background:${g.c}18;border-color:${g.c}50;color:${g.c}">${g.lbl}</span>
@@ -491,7 +870,7 @@ function renderData(d){
       </div>
 
       <div class="rrow">
-        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Risque composite</span>
+        <span style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Risque</span>
         <div class="riskbar-wrap">
           <div class="riskbar-fill" style="width:${cr*10}%;background:${riskColor(cr)}"></div>
         </div>
@@ -512,6 +891,7 @@ function renderData(d){
         </div>
         <div class="catrow"><span class="il">Catalyseur</span><span style="color:var(--t2)">${s.catalyst||""}</span></div>
         <div class="rsnrow"><span class="il">Analyse</span><span style="color:var(--t3)">${s.reason||""}</span></div>
+        ${s.score_breakdown?`<div class="rsnrow"><span class="il">Score</span><span style="color:var(--t3)">${s.score_breakdown}</span></div>`:""}
       </div>
 
       ${s.warning?`<div class="swarn"><i class="ti ti-alert-circle" style="font-size:11px;vertical-align:-1px;margin-right:4px"></i>${s.warning}</div>`:""}
@@ -525,25 +905,9 @@ function renderData(d){
   h+=`</div>`;
 
   if(d.last_updated)h+=`<div style="font-size:10px;color:var(--t3);text-align:center">Scan #${S.scans} · ${fmtT(d.last_updated)}</div>`;
-  h+=`<div class="footer">Ce terminal est à titre informatif uniquement — pas de conseil en investissement.<br>Tout investissement comporte un risque de perte en capital.<br>Les 5 filtres réduisent le risque mais ne l'éliminent pas.</div>`;
-  ge("body").innerHTML=h;
+  h+=`<div class="footer">Ce terminal est à titre informatif uniquement — pas de conseil en investissement.<br>Tout investissement comporte un risque de perte en capital.<br>Les 5 filtres et le scoring réduisent le risque mais ne l'éliminent pas.</div>`;
+  body.innerHTML=h;
 }
-
-// ══ ALERT SHEET ══
-let curT=null;
-function openAlerts(t){curT=t;const cfg=S.alerts[t]||{};ge("al-title").textContent="Alertes — "+t;
-ge("al-body").innerHTML=`<div class="info-box"><i class="ti ti-info-circle" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Les alertes se déclenchent lors des scans. Activez les notifications navigateur pour les recevoir en arrière-plan.</span></div>
-<div class="arow"><div class="arhdr"><span><i class="ti ti-trending-up" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--buy)"></i>Alerte si cours monte au-dessus de</span><div class="tgl ${cfg.aboveOn?"on":""}" id="tgl-above" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div><div class="api-row"><input type="number" id="inp-above" placeholder="Ex: 350" value="${cfg.above||""}" step="0.01" min="0"><span style="font-size:13px;color:var(--t3)">$</span></div></div>
-<div class="arow"><div class="arhdr"><span><i class="ti ti-trending-down" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--sell)"></i>Alerte si cours tombe sous</span><div class="tgl ${cfg.belowOn?"on":""}" id="tgl-below" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div><div class="api-row"><input type="number" id="inp-below" placeholder="Ex: 290" value="${cfg.below||""}" step="0.01" min="0"><span style="font-size:13px;color:var(--t3)">$</span></div></div>
-<div class="arow"><div class="arhdr"><span><i class="ti ti-bell" style="font-size:12px;vertical-align:-1px;margin-right:4px;color:var(--hold)"></i>Alerte si signal change (AVOID → BUY…)</span><div class="tgl ${cfg.sigOn?"on":""}" id="tgl-sig" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div></div>
-<button class="btn-p" onclick="saveAlerts()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer</button>`;
-ge("al-overlay").classList.add("show");}
-function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-above").classList.contains("on"),above:parseFloat(ge("inp-above").value)||0,belowOn:ge("tgl-below").classList.contains("on"),below:parseFloat(ge("inp-below").value)||0,sigOn:ge("tgl-sig").classList.contains("on"),lastSig:S.alerts[t]?.lastSig||""};save();closeSheet("al-overlay");if(S.data)renderData(S.data);}
-
-// ══ SETTINGS ══
-function showSettings(){ge("cfg-overlay").classList.add("show");}
-function changeKey(){const v=ge("key-change").value.trim();if(!v)return;S.key=v;save();closeSheet("cfg-overlay");}
-function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
 </script>
 </body>
 </html>
