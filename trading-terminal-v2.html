@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -337,6 +337,27 @@ body{
 .setup-note{font-size:10px;color:var(--t3);text-align:center;line-height:1.6}
 .setup-note a{color:var(--blue);text-decoration:none}
 
+/* ── PORTFOLIO MANAGEMENT ── */
+.pf-subtabs{display:flex;gap:4px;background:var(--bg3);padding:3px;border-radius:9px;margin-bottom:12px}
+.pf-subtab{flex:1;padding:7px;text-align:center;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;border-radius:7px;transition:all .18s}
+.pf-subtab.active{background:var(--bg);color:var(--t1);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.saved-pos{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;position:relative}
+.saved-pos-hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.saved-tkr{font-size:15px;font-weight:800;font-family:monospace}
+.saved-nm{font-size:10px;color:var(--t3);flex:1}
+.del-btn{padding:4px 6px;border-radius:6px;border:1px solid var(--bd2);background:var(--bg4);color:var(--t3);cursor:pointer;font-size:11px;flex-shrink:0;transition:all .15s}
+.del-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-d)}
+.pos-stats{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;margin-bottom:5px}
+.pl-pos{color:var(--green);font-weight:700}
+.pl-neg{color:var(--red);font-weight:700}
+.reco-card{border-radius:10px;padding:11px 13px;border:1px solid;display:flex;gap:10px;align-items:flex-start}
+.reco-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.reco-tkr{font-size:13px;font-weight:800;font-family:monospace;margin-bottom:2px}
+.reco-msg{font-size:11px;color:var(--t2);line-height:1.5}
+.port-total{background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(155,109,255,.04));border:1px solid rgba(79,142,247,.18);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.port-total-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.port-total-val{font-size:14px;font-weight:800;font-family:monospace}
+
 /* ── UTILS ── */
 .hidden{display:none!important}
 .footer{font-size:9px;color:var(--t4);text-align:center;padding:14px;border-top:1px solid var(--bd);line-height:1.7}
@@ -432,6 +453,41 @@ body{
   <div class="panel" id="panel-st"><div class="panel-inner" id="st-body"></div></div>
 </div>
 
+<!-- ═══ SHEET: Ajouter une position ═══ -->
+<div class="overlay" id="pos-sheet" onclick="closeSheet('pos-sheet',event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Ajouter une position</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div class="sheet-lbl">Ticker *</div>
+        <input class="input" id="pos-ticker" placeholder="NVDA" style="text-transform:uppercase;font-weight:700;font-family:monospace;font-size:15px">
+      </div>
+      <div>
+        <div class="sheet-lbl">Nom (optionnel)</div>
+        <input class="input" id="pos-name" placeholder="NVIDIA Corp.">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div class="sheet-lbl">Quantité *</div>
+        <input type="number" class="input" id="pos-qty" placeholder="10" min="0.001" step="any">
+      </div>
+      <div>
+        <div class="sheet-lbl">Prix d'achat ($) *</div>
+        <input type="number" class="input" id="pos-buy" placeholder="185.50" min="0" step="any">
+      </div>
+    </div>
+    <div>
+      <div class="sheet-lbl">Date d'achat</div>
+      <input type="date" class="input" id="pos-date">
+    </div>
+    <div class="info-box"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0"></i>Les positions sont sauvegardées localement sur ton appareil. Le P&L est calculé en temps réel à chaque scan.</div>
+    <button class="btn btn-primary btn-full" onclick="addSavedPosition()"><i class="ti ti-device-floppy"></i>Enregistrer la position</button>
+    <button class="btn btn-ghost btn-full" onclick="closeSheet('pos-sheet')">Annuler</button>
+  </div>
+</div>
+
 <!-- ═══ SHEET: Alertes ═══ -->
 <div class="overlay" id="alert-sheet" onclick="closeSheet('alert-sheet',event)">
   <div class="sheet">
@@ -500,10 +556,11 @@ const PF_AC = {
 let S = {
   key:"", data:null, pfData:null, pfInput:"", pfImg:null,
   stratData:null, stratCfg:{time:"3M",risk:"Modéré",budget:""},
+  portfolio:[], recos:[],                    // ← saved positions + smart recos
   alerts:{}, log:[], logOpen:false,
   autoOn:false, ivSec:600, cd:600,
   loading:false, loadingPf:false, loadingSt:false,
-  scans:0, tab:"scan",
+  scans:0, tab:"scan", pfTab:"positions",    // ← pf sub-tab
 };
 
 // ── HELPERS ───────────────────────────────────────
@@ -516,23 +573,27 @@ const RC  = r  => r>=8?"var(--red)":r>=5?"var(--amber)":"var(--green)";
 // ── PERSIST ───────────────────────────────────────
 function save() {
   try {
-    localStorage.setItem("tai_k",  S.key);
-    localStorage.setItem("tai_d",  JSON.stringify(S.data));
-    localStorage.setItem("tai_pf", JSON.stringify(S.pfData));
-    localStorage.setItem("tai_pi", S.pfInput);
-    localStorage.setItem("tai_a",  JSON.stringify(S.alerts));
-    localStorage.setItem("tai_l",  JSON.stringify(S.log.slice(0,50)));
-    localStorage.setItem("tai_sc", JSON.stringify(S.stratCfg));
+    localStorage.setItem("tai_k",   S.key);
+    localStorage.setItem("tai_d",   JSON.stringify(S.data));
+    localStorage.setItem("tai_pf",  JSON.stringify(S.pfData));
+    localStorage.setItem("tai_pi",  S.pfInput);
+    localStorage.setItem("tai_a",   JSON.stringify(S.alerts));
+    localStorage.setItem("tai_l",   JSON.stringify(S.log.slice(0,50)));
+    localStorage.setItem("tai_sc",  JSON.stringify(S.stratCfg));
+    localStorage.setItem("tai_port",JSON.stringify(S.portfolio)); // saved positions
+    localStorage.setItem("tai_rc",  JSON.stringify(S.recos));
   } catch(e){}
 }
 function load() {
-  S.key      = localStorage.getItem("tai_k")  || "";
-  S.pfInput  = localStorage.getItem("tai_pi") || "";
-  S.alerts   = JSON.parse(localStorage.getItem("tai_a")  || "{}");
-  S.log      = JSON.parse(localStorage.getItem("tai_l")  || "[]");
-  S.stratCfg = JSON.parse(localStorage.getItem("tai_sc") || "null") || S.stratCfg;
-  try { S.data    = JSON.parse(localStorage.getItem("tai_d")); } catch(e){}
-  try { S.pfData  = JSON.parse(localStorage.getItem("tai_pf")); } catch(e){}
+  S.key       = localStorage.getItem("tai_k")   || "";
+  S.pfInput   = localStorage.getItem("tai_pi")  || "";
+  S.alerts    = JSON.parse(localStorage.getItem("tai_a")    || "{}");
+  S.log       = JSON.parse(localStorage.getItem("tai_l")    || "[]");
+  S.stratCfg  = JSON.parse(localStorage.getItem("tai_sc")   || "null") || S.stratCfg;
+  S.portfolio = JSON.parse(localStorage.getItem("tai_port") || "[]");
+  S.recos     = JSON.parse(localStorage.getItem("tai_rc")   || "[]");
+  try { S.data   = JSON.parse(localStorage.getItem("tai_d")); }  catch(e){}
+  try { S.pfData = JSON.parse(localStorage.getItem("tai_pf")); } catch(e){}
 }
 
 // ── INIT ──────────────────────────────────────────
@@ -763,6 +824,174 @@ Retourne UNIQUEMENT du JSON brut:
 {"strategy_title":"X","budget":${budget||1000},"timeframe":"${time}","risk_profile":"${risk}","expected_return_min":8,"expected_return_max":22,"positions":[{"ticker":"X","name":"X","allocation_pct":30,"allocation_eur":300,"action":"Acheter","entry_price":"X","target_price":"X","stop_loss":"X","rationale":"X","type":"ETF|Action|Crypto"}],"weekly_plan":[{"week":"Semaine 1","actions":["X","Y"]},{"week":"Semaine 2","actions":["X"]},{"week":"Semaine 3","actions":["X"]},{"week":"Semaine 4","actions":["X"]}],"key_risks":["X","Y"],"summary":"X"}`;
 }
 
+// ── PORTFOLIO MANAGEMENT ──────────────────────────
+
+/* Add / remove saved positions */
+function addSavedPosition() {
+  const tkr   = $("pos-ticker").value.trim().toUpperCase();
+  const name  = $("pos-name").value.trim() || tkr;
+  const qty   = parseFloat($("pos-qty").value)||0;
+  const buy   = parseFloat($("pos-buy").value)||0;
+  const date  = $("pos-date").value || new Date().toISOString().split("T")[0];
+  if (!tkr)  { alert("Entrez le ticker (ex: NVDA)"); return; }
+  if (qty<=0) { alert("Entrez une quantité"); return; }
+  if (buy<=0) { alert("Entrez un prix d'achat"); return; }
+  // avoid duplicates — update if already exists
+  const idx = S.portfolio.findIndex(p => p.ticker === tkr);
+  const entry = { id: idx>=0 ? S.portfolio[idx].id : Date.now().toString(), ticker:tkr, name, qty, buy, date };
+  if (idx>=0) S.portfolio[idx]=entry; else S.portfolio.push(entry);
+  save(); closeSheet("pos-sheet"); renderPf();
+  // immediately fetch live price for this ticker
+  fetchRealPrices([tkr]).then(lp => { if(lp[tkr]){S.portfolio.find(p=>p.ticker===tkr)._live=lp[tkr];renderPf();} });
+}
+function removeSavedPosition(id) {
+  S.portfolio = S.portfolio.filter(p => p.id !== id);
+  S.recos     = S.recos.filter(r => !r._id?.startsWith(id));
+  save(); renderPf();
+}
+function openAddPos(tkr="",name="",qty="",buy="") {
+  $("pos-ticker").value=tkr; $("pos-name").value=name;
+  $("pos-qty").value=qty;    $("pos-buy").value=buy;
+  $("pos-date").value=new Date().toISOString().split("T")[0];
+  $("pos-sheet").classList.add("show");
+}
+function switchPfTab(t) {
+  S.pfTab=t; save(); renderPf();
+}
+
+/* Refresh all live prices for saved portfolio */
+async function refreshPortfolioPrices() {
+  if (!S.portfolio.length) return;
+  const tickers = S.portfolio.map(p=>p.ticker);
+  const lp = await fetchRealPrices(tickers);
+  S.portfolio.forEach(p => { if(lp[p.ticker]) p._live=lp[p.ticker]; });
+  save(); renderPf();
+}
+
+/* ── SMART RECOMMENDATION ENGINE ──────────────────
+   Cross-references saved portfolio with latest scan.
+   Generates actionable buy/sell/hold/opportunity recos.
+   Called automatically after every scan.             */
+function generateRecos() {
+  if (!S.data?.stocks) return;
+  const recos = [];
+  const scanMap = {};
+  (S.data.stocks||[]).forEach(s => { scanMap[s.ticker]=s; });
+  const portTickers = new Set(S.portfolio.map(p=>p.ticker));
+
+  // ── Check each portfolio position vs scan signal ──
+  S.portfolio.forEach(pos => {
+    const s = scanMap[pos.ticker];
+    const lv = pos._live;
+    const cur = lv?.priceNum || null;
+    const plPct = cur && pos.buy>0 ? ((cur-pos.buy)/pos.buy*100).toFixed(1) : null;
+
+    if (s) {
+      // Strong sell / avoid → urgent notification
+      if (["SELL","AVOID"].includes(s.action) && s.score < 45) {
+        recos.push({ type:"SELL", ticker:pos.ticker, score:s.score, urgency:"HIGH",
+          msg:`Signal ${s.action} — Score ${s.score}/100 — envisage de vendre${plPct?` (P&L actuel: ${plPct>0?"+":""}${plPct}%)`:""}.` });
+        notify(`⚠️ ${pos.ticker} — Vendre`, `Score ${s.score}/100 · Signal ${s.action}`);
+      }
+      // Reduce position
+      else if (s.action==="REDUCE") {
+        recos.push({ type:"REDUCE", ticker:pos.ticker, score:s.score, urgency:"MEDIUM",
+          msg:`Signal Réduire — Score ${s.score}/100 — allège de 30-50%${plPct?` (${plPct>0?"+":""}${plPct}%)`:""}.` });
+      }
+      // Strong buy = reinforce
+      else if (s.action==="BUY" && s.score>=78) {
+        recos.push({ type:"REINFORCE", ticker:pos.ticker, score:s.score, urgency:"LOW",
+          msg:`Signal Renforcer fort — Score ${s.score}/100 — bonne fenêtre pour accumuler. Catalyseur: ${s.catalyst||"—"}` });
+        if (s.score>=85) notify(`✅ ${pos.ticker} — Renforcer`, `Score ${s.score}/100 · Signal BUY fort`);
+      }
+      // Hold = reassure
+      else {
+        recos.push({ type:"HOLD", ticker:pos.ticker, score:s.score, urgency:"INFO",
+          msg:`Conserver — Score ${s.score}/100 — pas d'action urgente.${plPct?` P&L: ${plPct>0?"+":""}${plPct}%.`:""} ` });
+      }
+    } else {
+      // Not in scan, just show P&L
+      recos.push({ type:"WATCH", ticker:pos.ticker, score:0, urgency:"INFO",
+        msg:`Hors du radar ce scan${plPct?` — P&L actuel: ${plPct>0?"+":""}${plPct}%`:""} — surveille les prochains scans.` });
+    }
+  });
+
+  // ── Opportunities NOT in portfolio ────────────────
+  (S.data.stocks||[]).forEach(s => {
+    if (!portTickers.has(s.ticker) && s.action==="BUY" && s.score>=74) {
+      recos.push({ type:"OPPORTUNITY", ticker:s.ticker, name:s.name, score:s.score, urgency:s.score>=85?"HIGH":"MEDIUM",
+        catalyst: s.catalyst,
+        msg:`Score ${s.score}/100 — Opportunité non présente dans ton portefeuille. ${s.catalyst||""}` });
+      if (s.score>=85) notify(`🚀 ${s.ticker} — Opportunité`, `Score ${s.score}/100 — Non dans ton portef.`);
+    }
+  });
+
+  // Sort: SELL first → REDUCE → OPPORTUNITY → REINFORCE → HOLD → WATCH
+  const pri = {SELL:0,REDUCE:1,OPPORTUNITY:2,REINFORCE:3,HOLD:4,WATCH:5};
+  recos.sort((a,b) => (pri[a.type]??9)-(pri[b.type]??9) || (b.score-a.score));
+  S.recos = recos; save();
+}
+
+// ── REAL-TIME PRICES (Yahoo Finance via CORS proxies) ──────
+// Tries multiple proxies in sequence until one works
+async function fetchRealPrices(tickers) {
+  if (!tickers.length) return {};
+  const syms = tickers.filter(Boolean).join(',');
+  // Yahoo Finance quote endpoint
+  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow`;
+  // CORS proxy list — tried in order
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`,
+  ];
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(7000) });
+      if (!res.ok) continue;
+      let raw = await res.json();
+      // allorigins wraps result in 'contents'
+      if (raw.contents) raw = JSON.parse(raw.contents);
+      const quotes = raw?.quoteResponse?.result || [];
+      if (!quotes.length) continue;
+      const out = {};
+      quotes.forEach(q => {
+        const chgPct = q.regularMarketChangePercent || 0;
+        const chg    = q.regularMarketChange || 0;
+        const sign   = chgPct >= 0 ? '+' : '';
+        out[q.symbol] = {
+          priceStr:  `$${q.regularMarketPrice?.toFixed(2)}`,
+          priceNum:  q.regularMarketPrice,
+          changePct: `${sign}${chgPct.toFixed(2)}%`,
+          changeAmt: `${sign}${chg.toFixed(2)}`,
+          isUp:      chgPct >= 0,
+          high:      q.regularMarketDayHigh?.toFixed(2),
+          low:       q.regularMarketDayLow?.toFixed(2),
+          live:      true,
+        };
+      });
+      console.log(`[TradeAI] Prix live via ${url.split('?')[0]}`);
+      return out;
+    } catch(e) { /* try next proxy */ }
+  }
+  console.warn('[TradeAI] Impossible de récupérer les prix live');
+  return {};
+}
+
+// Also fetch S&P500, VIX, Brent for the market bar
+async function fetchMarketData() {
+  try {
+    const data = await fetchRealPrices(['^GSPC','^VIX','BZ=F']);
+    return {
+      sp500: data['^GSPC']?.priceStr  || null,
+      sp500Up: data['^GSPC']?.isUp,
+      sp500Chg: data['^GSPC']?.changePct,
+      vix:   data['^VIX']?.priceStr   || null,
+      oil:   data['BZ=F']?.priceStr   || null,
+    };
+  } catch(e) { return {}; }
+}
+
 // ── RUN SCAN ──────────────────────────────────────
 async function runScan() {
   if (S.loading||!S.key) return;
@@ -773,12 +1002,37 @@ async function runScan() {
   let si=0; setSbar(SCAN_MSGS[0]);
   const si2=setInterval(()=>{si=(si+1)%SCAN_MSGS.length;setSbar(SCAN_MSGS[si]);},3500);
   try {
+    // Step 1 — AI analysis (tickers, catalysts, scoring)
     const txt=await groq(SCAN_PROMPT);
     clearInterval(si2);
     const p=parseJ(txt);
     if(p.stocks)p.stocks.sort((a,b)=>(b.score||0)-(a.score||0));
+
+    // Step 2 — Fetch REAL prices from Yahoo Finance
+    setSbar('Récupération des cours en temps réel...');
+    const tickers=(p.stocks||[]).map(s=>s.ticker).filter(Boolean);
+    const [livePrices, liveMarket] = await Promise.all([
+      fetchRealPrices(tickers),
+      fetchMarketData(),
+    ]);
+
+    // Step 3 — Inject real prices into AI response
+    let pricesInjected=0;
+    p.stocks=(p.stocks||[]).map(s=>{
+      const lp=livePrices[s.ticker];
+      if(lp){pricesInjected++;return{...s,current_price:lp.priceStr,price_change:lp.changePct,price_amt:lp.changeAmt,price_is_up:lp.isUp,price_live:true,day_high:lp.high,day_low:lp.low};}
+      return s;
+    });
+    p.prices_live=pricesInjected>0;
+
+    // Step 4 — Inject real market bar data
+    if(liveMarket.sp500) p.market_context={...p.market_context,sp500:liveMarket.sp500+(liveMarket.sp500Chg?' ('+liveMarket.sp500Chg+')':''),vix:liveMarket.vix||p.market_context?.vix,oil_brent:liveMarket.oil||p.market_context?.oil_brent};
+
     initAlerts(p.stocks||[]);checkAlerts(p.stocks||[]);
-    S.data=p;S.scans++;save();renderScan(p);
+    S.data=p;S.scans++;save();
+    generateRecos();           // ← update smart recommendations
+    refreshPortfolioPrices();  // ← refresh saved portfolio prices
+    renderScan(p);renderPf();  // ← re-render both panels
     hideSbar();dot.className=S.autoOn?"dot dot-auto":"dot dot-ok";
     if(S.autoOn){S.cd=S.ivSec;updateCD();}
   } catch(e) {
@@ -809,7 +1063,21 @@ async function analyzePf() {
       hideSbar();
     }
     const txt=await groq(pfPrompt(positions));
-    S.pfData=parseJ(txt);save();renderPf();
+    const pf=parseJ(txt);
+
+    // Inject real prices into portfolio positions
+    setSbar("Récupération des cours en temps réel...");
+    const tickers=(pf.positions||[]).map(p=>p.ticker).filter(Boolean);
+    if(tickers.length){
+      const lp=await fetchRealPrices(tickers);
+      pf.positions=(pf.positions||[]).map(p=>{
+        const r=lp[p.ticker];
+        if(r)return{...p,current_price:r.priceStr,price_change:r.changePct,price_live:true};
+        return p;
+      });
+    }
+    hideSbar();
+    S.pfData=pf;save();renderPf();
   } catch(e){alert("Erreur: "+e.message);}
   finally {
     S.loadingPf=false;hideSbar();
@@ -935,6 +1203,8 @@ function renderScan(d) {
       <div class="prow">
         ${[["Cours",s.current_price,"var(--t1)"],["Entrée",s.entry,"var(--blue)"],["Stop",s.stop_loss,"var(--red)"],["TP1",s.tp1,"var(--green)"],["TP2",s.tp2,"#0fa063"]]
           .map(([l,v,c])=>`<div class="pcell"><div class="plbl">${l}</div><div class="pval" style="color:${c}">${v||"–"}</div></div>`).join("")}
+        ${s.price_change?`<div class="pcell"><div class="plbl">Var.</div><div class="pval" style="color:${s.price_is_up?"var(--green)":"var(--red)"}">${s.price_change}</div></div>`:""}
+        ${s.price_live?`<div class="pcell" style="background:var(--green-d);border-color:rgba(16,201,122,.2)"><div class="plbl">Prix</div><div class="pval" style="color:var(--green);font-size:9px">LIVE</div></div>`:""}
       </div>
       <div class="sc-info">
         <div class="info-row">
@@ -954,87 +1224,217 @@ function renderScan(d) {
       ${events.map(e=>`<div class="cal-row"><span class="cal-date">${e.date}</span><span class="cal-tk">${e.ticker}</span><span class="cal-ev">${e.event}</span></div>`).join("")}
     </div>`;
   }
-  if(d.last_updated)h+=`<div class="text-xs text-muted" style="text-align:center">Scan #${S.scans} · ${fT(d.last_updated)}</div>`;
+  if(d.last_updated)h+=`<div class="text-xs text-muted" style="text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
+    ${d.prices_live?`<span class="badge badge-sm" style="background:var(--green-d);border-color:rgba(16,201,122,.3);color:var(--green)"><i class="ti ti-wave-sine"></i>Cours LIVE</span>`:`<span class="badge badge-sm" style="background:var(--amber-d);border-color:rgba(245,166,35,.3);color:var(--amber)"><i class="ti ti-alert-triangle"></i>Cours estimés — connexion impossible</span>`}
+    Scan #${S.scans} · ${fT(d.last_updated)}
+  </div>`;
   h+=`<div class="footer">TradeAI est à titre informatif uniquement — pas de conseil en investissement.<br>Tout investissement comporte un risque de perte en capital.</div>`;
   $("scan-body").innerHTML=h;
 }
 
 // ── RENDER PORTFOLIO ──────────────────────────────
 function renderPf() {
-  let h=`<div class="card">
-    <div style="font-size:13px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:6px;margin-bottom:12px"><i class="ti ti-briefcase" style="font-size:15px"></i>Votre portefeuille</div>
+  const tab = S.pfTab || "positions";
+  const scanMap = {};
+  (S.data?.stocks||[]).forEach(s=>{ scanMap[s.ticker]=s; });
 
-    <div class="upload-zone" id="upload-zone" onclick="$('file-input').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();handleImg(event.dataTransfer.files[0])">
-      <i class="ti ti-camera-plus upload-icon" style="font-size:26px;color:var(--t3);display:block;margin-bottom:6px"></i>
-      <div style="font-size:13px;font-weight:600;margin-bottom:3px"><span class="upload-lbl">Importer une photo de portefeuille</span></div>
-      <div class="text-xs text-muted">Trade Republic, Boursorama, etc. — glissez ou cliquez</div>
-      <img id="upload-preview" class="upload-preview hidden">
-    </div>
-    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImg(this.files[0])">
+  // ── Portfolio summary numbers ──
+  let totalInvested=0, totalValue=0;
+  S.portfolio.forEach(p=>{
+    const cur = p._live?.priceNum || p.buy;
+    totalInvested += p.qty * p.buy;
+    totalValue    += p.qty * cur;
+  });
+  const totalPL    = totalValue - totalInvested;
+  const totalPLPct = totalInvested>0 ? (totalPL/totalInvested*100).toFixed(1) : 0;
+  const isProfit   = totalPL >= 0;
 
-    <div class="divider" style="margin:12px 0">ou entrez manuellement</div>
-
-    <div class="text-xs text-muted" style="background:var(--bg3);border-radius:7px;padding:8px 10px;line-height:1.8;margin-bottom:8px">
-      <strong style="color:var(--t2)">Format recommandé :</strong><br>
-      NVDA 10 actions à 205$ (+12%)<br>AAPL 5 actions à 195$<br>
-      <span style="color:var(--t4)">Ou librement : "J'ai du NVDA, AAPL et Tesla"</span>
-    </div>
-    <textarea class="input textarea" id="pf-textarea" placeholder="Vos positions...">${S.pfInput||""}</textarea>
-    <button class="btn btn-gold btn-full" id="pf-btn" onclick="analyzePf()" style="margin-top:8px"><i class="ti ti-sparkles"></i>Analyser avec l'IA</button>
+  let h = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px"><i class="ti ti-briefcase" style="color:var(--gold)"></i>Portefeuille</div>
+    <button class="btn btn-ghost btn-sm" onclick="refreshPortfolioPrices()" title="Actualiser les cours"><i class="ti ti-refresh"></i>Actualiser</button>
   </div>`;
 
-  if(S.pfData){
-    const d=S.pfData,sc=d.portfolio_score||0;
-    const sclr=sc>=70?"var(--green)":sc>=50?"var(--amber)":"var(--red)";
-    h+=`<div class="sec-hdr">Résultats de l'analyse</div>
-    <div class="card" style="border-color:rgba(251,191,36,.18)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px"><i class="ti ti-chart-bar"></i>Score global</div>
-        <div class="pf-score" style="color:${sclr};border-color:${sclr}35">${sc}/100</div>
-      </div>
-      ${d.portfolio_summary?`<div class="text-sm text-secondary" style="line-height:1.6">${d.portfolio_summary}</div>`:""}
+  // Summary totals (only if positions saved)
+  if(S.portfolio.length){
+    h+=`<div class="port-total">
+      <div><div class="port-total-lbl">Investi</div><div class="port-total-val" style="color:var(--t2)">$${totalInvested.toFixed(0)}</div></div>
+      <div><div class="port-total-lbl">Valeur</div><div class="port-total-val" style="color:var(--blue)">$${totalValue.toFixed(0)}</div></div>
+      <div><div class="port-total-lbl">P&L Total</div><div class="port-total-val ${isProfit?"pl-pos":"pl-neg"}">${isProfit?"+":""}${totalPLPct}%</div></div>
     </div>`;
+  }
 
-    if(d.positions?.length){
-      h+=`<div class="sec-hdr">Positions</div>`;
-      d.positions.forEach(p=>{
-        const pa=PF_AC[p.action_reco]||PF_AC["ATTENDRE"],rc=p.risk==="HIGH"?"var(--red)":p.risk==="MODERATE"?"var(--amber)":"var(--green)";
-        h+=`<div class="pf-pos">
-          <div class="pf-pos-hdr">
-            <span class="pf-tkr">${p.ticker}</span>
-            <span class="pf-nm">${p.name||""}</span>
-            <span class="badge badge-sm ${pa.cls}">${pa.lbl}</span>
-            <span class="badge badge-sm" style="background:${rc}12;border-color:${rc}30;color:${rc}">Risque ${p.risk||"?"}</span>
+  // Sub-tabs
+  h+=`<div class="pf-subtabs">
+    <div class="pf-subtab${tab==="positions"?" active":""}" onclick="switchPfTab('positions')"><i class="ti ti-list-check" style="font-size:12px"></i> Positions (${S.portfolio.length})</div>
+    <div class="pf-subtab${tab==="recos"?" active":""}" onclick="switchPfTab('recos')"><i class="ti ti-bulb" style="font-size:12px"></i> Recommandations ${S.recos.length?`<span style="background:var(--red);color:#fff;border-radius:50%;padding:1px 5px;font-size:9px;margin-left:3px">${S.recos.filter(r=>r.urgency==="HIGH").length||S.recos.length}</span>`:""}</div>
+    <div class="pf-subtab${tab==="analyse"?" active":""}" onclick="switchPfTab('analyse')"><i class="ti ti-sparkles" style="font-size:12px"></i> Analyse IA</div>
+  </div>`;
+
+  // ═══ TAB: POSITIONS ═══════════════════════════
+  if(tab==="positions"){
+    h+=`<button class="btn btn-primary btn-full" onclick="openAddPos()" style="margin-bottom:10px"><i class="ti ti-plus"></i>Ajouter une position</button>`;
+
+    if(!S.portfolio.length){
+      h+=`<div class="card" style="text-align:center;padding:28px 14px">
+        <i class="ti ti-briefcase" style="font-size:32px;color:var(--t3);display:block;margin-bottom:10px"></i>
+        <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:6px">Aucune position enregistrée</div>
+        <div class="text-xs text-muted" style="line-height:1.6">Ajoute tes actions pour suivre ton P&L en temps réel et recevoir des recommandations personnalisées à chaque scan.</div>
+      </div>`;
+    } else {
+      S.portfolio.forEach(pos=>{
+        const scan   = scanMap[pos.ticker];
+        const lv     = pos._live;
+        const cur    = lv?.priceNum || null;
+        const pl     = cur ? ((cur-pos.buy)/pos.buy*100) : null;
+        const plAmt  = cur ? ((cur-pos.buy)*pos.qty)     : null;
+        const plPos  = pl !== null && pl >= 0;
+        const sigCfg = scan ? (AC[scan.action]||AC.HOLD) : null;
+        const sc     = scan?.score || 0;
+        const scClr  = sc>=70?"var(--green)":sc>=50?"var(--amber)":"var(--red)";
+
+        h+=`<div class="saved-pos">
+          <div class="saved-pos-hdr">
+            <div>
+              <div class="saved-tkr">${pos.ticker}</div>
+              <div class="saved-nm">${pos.name} · ${pos.qty} actions</div>
+            </div>
+            ${sigCfg?`<span class="badge badge-sm ${sigCfg.cls}">${sigCfg.lbl}</span>`:""}
+            ${sc>0?`<span class="badge badge-sm" style="background:${scClr}15;border-color:${scClr}40;color:${scClr}">⭐${sc}</span>`:""}
+            <button class="del-btn" onclick="removeSavedPosition('${pos.id}')"><i class="ti ti-trash" style="font-size:11px"></i></button>
           </div>
-          <div class="pf-detail">
-            ${p.current_price?`<span>Cours <strong style="color:var(--t1)">${p.current_price}</strong></span>`:""}
-            ${p.pl_estimate?`<span>P&L <strong style="color:var(--t1)">${p.pl_estimate}</strong></span>`:""}
-            ${p.stop_court_terme?`<span>Stop <strong style="color:var(--red)">${p.stop_court_terme}</strong></span>`:""}
-            ${p.tp_court_terme?`<span>TP <strong style="color:var(--green)">${p.tp_court_terme}</strong></span>`:""}
+          <div class="pos-stats">
+            <span class="text-muted">Achat <strong style="color:var(--t1)">$${pos.buy.toFixed(2)}</strong></span>
+            ${cur?`<span class="text-muted">Cours <strong style="color:var(--t1)">$${cur.toFixed(2)}</strong>${lv?" ✦":""}</span>`:""}
+            ${pl!==null?`<span class="${plPos?"pl-pos":"pl-neg"}">${plPos?"+":""}${pl.toFixed(1)}%</span>`:""}
+            ${plAmt!==null?`<span class="${plPos?"pl-pos":"pl-neg"}">${plPos?"+":""}$${plAmt.toFixed(0)}</span>`:""}
           </div>
-          ${p.reason?`<div class="text-xs text-muted" style="margin-top:5px;line-height:1.5">${p.reason}</div>`:""}
+          ${scan?.catalyst?`<div class="text-xs text-muted" style="line-height:1.5">📌 ${scan.catalyst}</div>`:""}
         </div>`;
       });
     }
+  }
 
-    if(d.top_move||d.avoid_now||d.strategy){
-      h+=`<div class="sec-hdr">Stratégie</div><div class="card">`;
-      if(d.top_move)h+=`<div style="margin-bottom:10px"><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-target" style="color:var(--green)"></i>Action prioritaire 48h</div><div style="font-size:13px;font-weight:700;color:var(--green)">${d.top_move}</div></div>`;
-      if(d.avoid_now)h+=`<div style="margin-bottom:10px"><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-ban" style="color:var(--red)"></i>À éviter</div><div class="text-sm" style="color:#fca5a5">${d.avoid_now}</div></div>`;
-      if(d.strategy)h+=`<div><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-map" style="color:var(--blue)"></i>Stratégie globale</div><div class="text-sm text-secondary" style="line-height:1.6">${d.strategy}</div></div>`;
-      h+=`</div>`;
-    }
-
-    if(d.allocation_reco){
-      const ar=d.allocation_reco;
-      h+=`<div class="sec-hdr">Allocation recommandée</div><div class="pf-alloc">
-        <div class="pf-alloc-item"><div class="pf-alloc-lbl">Cash</div><div class="pf-alloc-val" style="color:var(--blue)">${ar.cash_pct||0}%</div></div>
-        <div class="pf-alloc-item"><div class="pf-alloc-lbl">Défensif</div><div class="pf-alloc-val" style="color:var(--amber)">${ar.defensive_pct||0}%</div></div>
-        <div class="pf-alloc-item"><div class="pf-alloc-lbl">Croissance</div><div class="pf-alloc-val" style="color:var(--green)">${ar.growth_pct||0}%</div></div>
-        <div class="pf-alloc-item"><div class="pf-alloc-lbl">Spéculatif</div><div class="pf-alloc-val" style="color:var(--orange)">${ar.speculative_pct||0}%</div></div>
+  // ═══ TAB: RECOMMANDATIONS ═════════════════════
+  else if(tab==="recos"){
+    if(!S.data?.stocks){
+      h+=`<div class="card" style="text-align:center;padding:24px 14px">
+        <i class="ti ti-radar" style="font-size:28px;color:var(--t3);display:block;margin-bottom:8px"></i>
+        <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:5px">Lance d'abord un scan</div>
+        <div class="text-xs text-muted" style="line-height:1.6">Les recommandations se génèrent automatiquement après chaque scan en comparant tes positions avec les meilleures opportunités du marché.</div>
+        <button class="btn btn-primary btn-sm" onclick="runScan();switchTab('scan')" style="margin-top:12px"><i class="ti ti-radar"></i>Scanner maintenant</button>
       </div>`;
+    } else if(!S.recos.length && !S.portfolio.length){
+      h+=`<div class="card" style="text-align:center;padding:24px 14px">
+        <div class="text-xs text-muted" style="line-height:1.6">Ajoute des positions pour recevoir des recommandations personnalisées.</div>
+      </div>`;
+    } else {
+      if(S.recos.length===0) h+=`<div class="card"><div class="text-sm text-secondary">Aucune recommandation urgente — tout semble bien positionné.</div></div>`;
+      else {
+        const RCFG = {
+          SELL:        { bg:"rgba(240,79,79,.08)",   bd:"rgba(240,79,79,.25)",   ic:"ti-arrow-down-circle", iclr:"var(--red)",    lbl:"Vendre",     lclr:"var(--red)"    },
+          REDUCE:      { bg:"rgba(248,113,113,.07)", bd:"rgba(248,113,113,.2)",  ic:"ti-arrows-minimize",  iclr:"#f87171",       lbl:"Réduire",    lclr:"#f87171"       },
+          OPPORTUNITY: { bg:"rgba(16,201,122,.06)",  bd:"rgba(16,201,122,.22)",  ic:"ti-rocket",           iclr:"var(--green)",  lbl:"Opportunité",lclr:"var(--green)"  },
+          REINFORCE:   { bg:"rgba(79,142,247,.07)",  bd:"rgba(79,142,247,.22)",  ic:"ti-trending-up",      iclr:"var(--blue)",   lbl:"Renforcer",  lclr:"var(--blue)"   },
+          HOLD:        { bg:"rgba(245,166,35,.05)",  bd:"rgba(245,166,35,.18)",  ic:"ti-pause-circle",     iclr:"var(--amber)",  lbl:"Conserver",  lclr:"var(--amber)"  },
+          WATCH:       { bg:"rgba(74,82,114,.12)",   bd:"rgba(74,82,114,.25)",   ic:"ti-eye",              iclr:"var(--t2)",     lbl:"Surveiller", lclr:"var(--t2)"     },
+        };
+        S.recos.forEach(r=>{
+          const c=RCFG[r.type]||RCFG.WATCH;
+          const sc=r.score||0;
+          h+=`<div class="reco-card" style="background:${c.bg};border-color:${c.bd}">
+            <div class="reco-icon" style="background:${c.iclr}18;border:1px solid ${c.iclr}35"><i class="ti ${c.ic}" style="color:${c.iclr}"></i></div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                <span class="reco-tkr">${r.ticker}</span>
+                <span class="badge badge-sm" style="background:${c.iclr}12;border-color:${c.iclr}35;color:${c.lclr}">${c.lbl}</span>
+                ${sc>0?`<span class="badge badge-sm" style="background:var(--bg3);border-color:var(--bd2);color:var(--t2)">⭐${sc}</span>`:""}
+              </div>
+              <div class="reco-msg">${r.msg}</div>
+              ${r.type==="OPPORTUNITY"?`<button class="btn btn-ghost btn-sm" onclick="openAddPos('${r.ticker}','${r.name||r.ticker}')" style="margin-top:6px"><i class="ti ti-plus"></i>Ajouter au portef.</button>`:""}
+            </div>
+          </div>`;
+        });
+      }
+
+      if(!S.portfolio.length){
+        h+=`<div class="card" style="border-style:dashed;text-align:center;padding:18px">
+          <div class="text-xs text-muted" style="margin-bottom:8px">Ajoute tes positions pour des recommandations personnalisées</div>
+          <button class="btn btn-primary btn-sm" onclick="switchPfTab('positions')"><i class="ti ti-plus"></i>Gérer mes positions</button>
+        </div>`;
+      }
     }
   }
+
+  // ═══ TAB: ANALYSE IA ══════════════════════════
+  else if(tab==="analyse"){
+    h+=`<div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ti ti-sparkles"></i>Analyse IA approfondie</div>
+
+      <div class="upload-zone" id="upload-zone" onclick="$('file-input').click()" ondragover="event.preventDefault()" ondrop="event.preventDefault();handleImg(event.dataTransfer.files[0])">
+        <i class="ti ti-camera-plus upload-icon" style="font-size:24px;color:var(--t3);display:block;margin-bottom:6px"></i>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px"><span class="upload-lbl">Importer une photo de portefeuille</span></div>
+        <div class="text-xs text-muted">Trade Republic, Boursorama, etc.</div>
+        <img id="upload-preview" class="upload-preview hidden">
+      </div>
+      <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImg(this.files[0])">
+
+      <div class="divider" style="margin:10px 0">ou décris tes positions</div>
+      <textarea class="input textarea" id="pf-textarea" placeholder="Tes positions, questions sur le marché..." style="min-height:80px">${S.pfInput||""}</textarea>
+      <button class="btn btn-gold btn-full" id="pf-btn" onclick="analyzePf()" style="margin-top:8px"><i class="ti ti-sparkles"></i>Analyser avec l'IA</button>
+    </div>`;
+
+    if(S.pfData){
+      const d=S.pfData,sc=d.portfolio_score||0;
+      const sclr=sc>=70?"var(--green)":sc>=50?"var(--amber)":"var(--red)";
+      h+=`<div class="sec-hdr">Résultats de l'analyse IA</div>
+      <div class="card" style="border-color:rgba(251,191,36,.15)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px"><i class="ti ti-chart-bar"></i>Score</div>
+          <div class="pf-score" style="color:${sclr};border-color:${sclr}35">${sc}/100</div>
+        </div>
+        ${d.portfolio_summary?`<div class="text-sm text-secondary" style="line-height:1.6">${d.portfolio_summary}</div>`:""}
+      </div>`;
+
+      if(d.positions?.length){
+        h+=`<div class="sec-hdr">Positions analysées</div>`;
+        d.positions.forEach(p=>{
+          const pa=PF_AC[p.action_reco]||PF_AC["ATTENDRE"],rc=p.risk==="HIGH"?"var(--red)":p.risk==="MODERATE"?"var(--amber)":"var(--green)";
+          h+=`<div class="pf-pos">
+            <div class="pf-pos-hdr">
+              <span class="pf-tkr">${p.ticker}</span><span class="pf-nm">${p.name||""}</span>
+              <span class="badge badge-sm ${pa.cls}">${pa.lbl}</span>
+              <span class="badge badge-sm" style="background:${rc}12;border-color:${rc}30;color:${rc}">Risque ${p.risk||"?"}</span>
+            </div>
+            <div class="pf-detail">
+              ${p.current_price?`<span>Cours <strong style="color:var(--t1)">${p.current_price}</strong>${p.price_live?` <span style="color:var(--green);font-size:9px">●LIVE</span>`:""}</span>`:""}
+              ${p.price_change?`<span style="color:${p.price_change.startsWith('+')?'var(--green)':'var(--red)'}"><strong>${p.price_change}</strong></span>`:""}
+              ${p.pl_estimate?`<span>P&L <strong style="color:var(--t1)">${p.pl_estimate}</strong></span>`:""}
+              ${p.stop_court_terme?`<span>Stop <strong style="color:var(--red)">${p.stop_court_terme}</strong></span>`:""}
+              ${p.tp_court_terme?`<span>TP <strong style="color:var(--green)">${p.tp_court_terme}</strong></span>`:""}
+            </div>
+            ${p.reason?`<div class="text-xs text-muted" style="margin-top:5px;line-height:1.5">${p.reason}</div>`:""}
+          </div>`;
+        });
+      }
+      if(d.top_move||d.avoid_now||d.strategy){
+        h+=`<div class="card" style="gap:10px;display:flex;flex-direction:column">`;
+        if(d.top_move) h+=`<div><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:4px;margin-bottom:4px"><i class="ti ti-target" style="color:var(--green)"></i>Action prioritaire</div><div style="font-size:13px;font-weight:700;color:var(--green)">${d.top_move}</div></div>`;
+        if(d.avoid_now) h+=`<div><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:4px;margin-bottom:4px"><i class="ti ti-ban" style="color:var(--red)"></i>À éviter</div><div class="text-sm" style="color:#fca5a5">${d.avoid_now}</div></div>`;
+        if(d.strategy)  h+=`<div><div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:4px;margin-bottom:4px"><i class="ti ti-map" style="color:var(--blue)"></i>Stratégie</div><div class="text-sm text-secondary" style="line-height:1.6">${d.strategy}</div></div>`;
+        h+=`</div>`;
+      }
+      if(d.allocation_reco){
+        const ar=d.allocation_reco;
+        h+=`<div class="pf-alloc">
+          <div class="pf-alloc-item"><div class="pf-alloc-lbl">Cash</div><div class="pf-alloc-val" style="color:var(--blue)">${ar.cash_pct||0}%</div></div>
+          <div class="pf-alloc-item"><div class="pf-alloc-lbl">Défensif</div><div class="pf-alloc-val" style="color:var(--amber)">${ar.defensive_pct||0}%</div></div>
+          <div class="pf-alloc-item"><div class="pf-alloc-lbl">Croissance</div><div class="pf-alloc-val" style="color:var(--green)">${ar.growth_pct||0}%</div></div>
+          <div class="pf-alloc-item"><div class="pf-alloc-lbl">Spéculatif</div><div class="pf-alloc-val" style="color:var(--orange)">${ar.speculative_pct||0}%</div></div>
+        </div>`;
+      }
+    }
+  }
+
   $("pf-body").innerHTML=h;
 }
 
