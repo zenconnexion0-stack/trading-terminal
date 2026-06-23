@@ -511,11 +511,14 @@ body{
       </div>
     </div>
     <div>
-      <div class="sheet-lbl">Changer la clé API Groq</div>
+      <div class="sheet-lbl">Clé API Groq</div>
       <input type="password" class="input" id="key-change" placeholder="gsk_...">
     </div>
     <div id="cfg-status" class="api-status hidden"></div>
-    <button class="btn btn-primary btn-full" onclick="changeKey()"><i class="ti ti-device-floppy"></i>Enregistrer</button>
+    <button class="btn btn-primary btn-full" onclick="changeKey()"><i class="ti ti-device-floppy"></i>Enregistrer la clé</button>
+    <!-- DIAGNOSTIC TOOL -->
+    <button class="btn btn-ghost btn-full" onclick="runDiag()" id="diag-btn"><i class="ti ti-stethoscope"></i>Diagnostiquer la connexion</button>
+    <div id="diag-result" style="display:none;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;line-height:1.8;max-height:280px;overflow-y:auto;white-space:pre-wrap;color:var(--t2)"></div>
     <button class="btn btn-ghost btn-full" onclick="requestNotif()"><i class="ti ti-bell"></i>Activer les notifications</button>
     <button class="btn btn-ghost btn-full" onclick="closeSheet('settings-sheet')">Fermer</button>
   </div>
@@ -725,51 +728,129 @@ function startTick(){stopTick();ticker=setInterval(()=>{if(!S.autoOn)return;S.cd
 function stopTick(){if(ticker){clearInterval(ticker);ticker=null;}}
 function updateCD(){const t=$("cd-txt"),f=$("cd-fill");if(t)t.textContent=fCD(S.cd);if(f)f.style.width=Math.round((S.cd/S.ivSec)*100)+"%";}
 
-// ── GROQ API ──────────────────────────────────────
-// useHeavy=true → 70b model (portef/stratégie), default = 8b instant (scan)
-async function groq(prompt, imgBase64=null, useHeavy=false) {
-  if (!S.key) throw new Error("Clé API manquante");
-  const model      = imgBase64 ? MODEL_VIS : (useHeavy ? MODEL_HEAVY : MODEL_TEXT);
-  const max_tokens = imgBase64 ? 2000 : 4000; // réduit = moins de tokens consommés
-  const content    = imgBase64
-    ? [{type:"image_url",image_url:{url:`data:image/jpeg;base64,${imgBase64}`}},{type:"text",text:prompt}]
-    : prompt;
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},
-    body:JSON.stringify({model,max_tokens,temperature:0.1,messages:[{role:"user",content}]})
-  });
-  if (!res.ok) {
-    let detail="";
-    try{ const e=await res.json(); detail=e.error?.message||""; }catch(e){}
-    if(res.status===401) throw new Error("Clé API invalide — vérifiez sur console.groq.com");
-    if(res.status===429) {
-      const secs = parseInt(res.headers.get("retry-after")||"62");
-      throw Object.assign(new Error(`Rate limit — reprise auto dans ${secs}s`), {code:"RATELIMIT", secs, detail});
+// ── MODEL LIST WITH FALLBACKS ─────────────────────
+// Tried in order — first success wins
+const FALLBACK_MODELS = [
+  "llama-3.1-8b-instant",
+  "llama3-8b-8192",
+  "gemma2-9b-it",
+  "llama-3.3-70b-versatile",
+];
+
+// ── DIAGNOSTIC TOOL ───────────────────────────────
+async function runDiag() {
+  const btn=$("diag-btn"), box=$("diag-result");
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader-2 spin"></i>Test en cours...';
+  box.style.display="block"; box.textContent="";
+  const log = (msg, color="") => {
+    box.innerHTML += `<span style="color:${color||'inherit'}">${msg}</span>\n`;
+    box.scrollTop = box.scrollHeight;
+  };
+  const key = $("key-change").value.trim() || S.key;
+  log(`🔑 Clé : ${key?key.slice(0,8)+"..."+key.slice(-4):"ABSENTE"}`, key?"var(--t2)":"var(--red)");
+  log(`📱 User-Agent : ${navigator.userAgent.slice(0,60)}...`);
+  log(`🌐 Online : ${navigator.onLine}`, navigator.onLine?"var(--green)":"var(--red)");
+  log("─────────────────────────────────────────");
+  // Test each model
+  for (const model of FALLBACK_MODELS) {
+    log(`\n⏳ Test ${model}...`);
+    try {
+      const t0 = Date.now();
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+        body:JSON.stringify({ model, max_tokens:10, temperature:0, messages:[{role:"user",content:"Hi"}] }),
+        signal: AbortSignal.timeout(12000)
+      });
+      const ms = Date.now()-t0;
+      const body = await res.text();
+      if (res.ok) {
+        log(`✅ ${model} → OK ${res.status} (${ms}ms)`, "var(--green)");
+        log(`   Réponse : ${body.slice(0,120)}`, "var(--t3)");
+        log(`\n👉 MODÈLE UTILISABLE : ${model}`, "var(--green)");
+        // Auto-apply working model
+        if (model !== MODEL_TEXT) {
+          log(`   ⚙️  Basculement automatique sur ${model}`, "var(--amber)");
+        }
+        btn.disabled=false; btn.innerHTML='<i class="ti ti-stethoscope"></i>Diagnostiquer la connexion';
+        return model; // first working model
+      } else {
+        log(`❌ ${model} → HTTP ${res.status} (${ms}ms)`, "var(--red)");
+        log(`   ${body.slice(0,200)}`, "var(--t3)");
+        // Show rate-limit headers
+        ["x-ratelimit-limit-tokens","x-ratelimit-remaining-tokens","x-ratelimit-reset-tokens","retry-after"]
+          .forEach(h=>{ const v=res.headers.get(h); if(v) log(`   ${h}: ${v}`,"var(--amber)"); });
+      }
+    } catch(e) {
+      log(`💥 ${model} → ${e.name}: ${e.message}`, "var(--red)");
     }
-    throw new Error(detail||"Erreur HTTP "+res.status);
   }
-  const d=await res.json();
-  return d.choices?.[0]?.message?.content||"";
+  log("\n❌ Aucun modèle ne répond.", "var(--red)");
+  log("Causes possibles :", "var(--amber)");
+  log("  • Clé API invalide ou expirée");
+  log("  • Réseau bloque api.groq.com");
+  log("  • Quota journalier dépassé");
+  log("\nVérifiez sur → console.groq.com/usage", "var(--blue)");
+  btn.disabled=false; btn.innerHTML='<i class="ti ti-stethoscope"></i>Diagnostiquer la connexion';
 }
 
-// Auto-retry with live countdown on 429
+// ── GROQ API — WITH AUTO FALLBACK & RETRY ────────
+async function groq(prompt, imgBase64=null, useHeavy=false) {
+  if (!S.key) throw new Error("Clé API manquante. Ouvrez ⚙️ Paramètres.");
+  const models = imgBase64
+    ? [MODEL_VIS]
+    : useHeavy
+      ? [MODEL_HEAVY, "llama-3.1-8b-instant", "llama3-8b-8192"]
+      : FALLBACK_MODELS;
+  const max_tokens = imgBase64 ? 2000 : 4000;
+  const content = imgBase64
+    ? [{type:"image_url",image_url:{url:`data:image/jpeg;base64,${imgBase64}`}},{type:"text",text:prompt}]
+    : prompt;
+  let lastErr = null;
+  for (const model of models) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},
+        body:JSON.stringify({model,max_tokens,temperature:0.1,messages:[{role:"user",content}]}),
+        signal: AbortSignal.timeout(30000)
+      });
+      if (res.ok) {
+        const d = await res.json();
+        return d.choices?.[0]?.message?.content || "";
+      }
+      let detail="";
+      try{ const e=await res.json(); detail=e.error?.message||""; }catch(e){}
+      if(res.status===401) throw new Error("Clé invalide — vérifiez sur console.groq.com");
+      if(res.status===429) {
+        const secs=parseInt(res.headers.get("retry-after")||"65");
+        lastErr=Object.assign(new Error(`[${model}] Rate limit ${secs}s — ${detail}`),{code:"RATELIMIT",secs,model});
+        continue; // try next model
+      }
+      lastErr=new Error(`[${model}] HTTP ${res.status} — ${detail}`);
+    } catch(e){
+      if(e.name==="AbortError"){lastErr=new Error(`[${model}] Timeout 30s`);continue;}
+      if(e.code==="RATELIMIT"){lastErr=e;continue;}
+      if(e.message.includes("invalide"))throw e;
+      lastErr=e;
+    }
+  }
+  throw lastErr||new Error("Tous les modèles ont échoué — vérifiez le diagnostic");
+}
+
+// Auto-retry with live countdown on rate limit
 async function groqWithRetry(prompt, imgBase64=null, useHeavy=false) {
   try {
     return await groq(prompt, imgBase64, useHeavy);
   } catch(e) {
-    if (e.code==="RATELIMIT") {
-      let s = (e.secs||62);
-      setSbar(`⏳ Limite Groq — reprise dans ${s}s...`, true);
-      await new Promise(resolve => {
-        const iv = setInterval(()=>{
-          s--;
-          setSbar(`⏳ Limite Groq — reprise dans ${s}s... (${e.detail||MODEL_TEXT})`, true);
-          if(s<=0){ clearInterval(iv); resolve(); }
-        },1000);
+    if(e.code==="RATELIMIT") {
+      let s=e.secs||65;
+      setSbar(`⏳ Rate limit (${e.model}) — reprise dans ${s}s...`,true);
+      await new Promise(resolve=>{
+        const iv=setInterval(()=>{s--;setSbar(`⏳ Rate limit — reprise dans ${s}s...`,true);if(s<=0){clearInterval(iv);resolve();}},1000);
       });
-      setSbar("Réessai en cours...");
-      return await groq(prompt, imgBase64, useHeavy); // 1 retry
+      setSbar("🔄 Réessai...");
+      return await groq(prompt,imgBase64,useHeavy);
     }
     throw e;
   }
