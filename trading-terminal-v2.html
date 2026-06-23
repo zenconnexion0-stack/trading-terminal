@@ -155,46 +155,21 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
   <div class="setup-card">
     <div>
       <div class="setup-title">⚡ TERMINAL IA v3</div>
-      <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
-        <span style="background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">5 FILTRES</span>
-        <span style="background:rgba(249,115,22,.15);border:1px solid #f97316;color:#f97316;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PARI BINAIRE</span>
+      <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:rgba(34,197,94,.15);border:1px solid #22c55e;color:#22c55e;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">5 FILTRES ANTI-PERTE</span>
+        <span style="background:rgba(249,115,22,.15);border:1px solid #f97316;color:#f97316;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">PARI BINAIRE DÉTECTÉ</span>
         <span style="background:rgba(96,165,250,.15);border:1px solid #60a5fa;color:#60a5fa;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">AUTO-REFRESH</span>
-        <span style="background:rgba(234,179,8,.15);border:1px solid #eab308;color:#ca8a04;font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600">GEMINI GRATUIT</span>
       </div>
-      <div class="setup-sub" style="margin-top:10px">Choisissez votre fournisseur d'IA et entrez votre clé API.</div>
+      <div class="setup-sub" style="margin-top:10px">Analyse en temps réel avec détection automatique des risques cachés.<br>Entrez votre clé API Anthropic.</div>
     </div>
-
-    <!-- Provider tabs -->
-    <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:10px;overflow:hidden">
-      <button id="tab-gemini" onclick="selectProvider('gemini')" style="flex:1;padding:10px;background:rgba(234,179,8,.15);border:none;color:#ca8a04;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;border-right:1px solid var(--bd2)">
-        <i class="ti ti-brand-google" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Gemini (Gratuit)
-      </button>
-      <button id="tab-anthropic" onclick="selectProvider('anthropic')" style="flex:1;padding:10px;background:var(--bg);border:none;color:var(--t3);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer">
-        <i class="ti ti-robot" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>Anthropic
-      </button>
-    </div>
-
-    <!-- Gemini section -->
-    <div id="section-gemini">
-      <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:10px;padding:10px;margin-bottom:10px">
-        <div style="font-size:11px;color:#ca8a04;font-weight:600;margin-bottom:4px"><i class="ti ti-gift" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Gemini 2.0 Flash — Gratuit</div>
-        <div style="font-size:10px;color:var(--t2);line-height:1.6">✓ 1 500 scans/jour gratuits<br>✓ Recherche Google intégrée<br>✓ Aucune carte bancaire requise</div>
-      </div>
-      <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Google AI Studio</div>
-      <input type="password" class="fi" id="gemini-key-input" placeholder="AIza..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
-      <div class="setup-note" style="margin-top:8px">Clé gratuite sur <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div>
-    </div>
-
-    <!-- Anthropic section -->
-    <div id="section-anthropic" style="display:none">
+    <div>
       <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clé API Anthropic</div>
-      <input type="password" class="fi" id="anthropic-key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
-      <div class="setup-note" style="margin-top:8px">Clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+      <input type="password" class="fi" id="key-input" placeholder="sk-ant-api03-..." autocomplete="off" onkeydown="if(event.key==='Enter')saveKey()">
     </div>
-
     <button class="btn-p" onclick="saveKey()">
       <i class="ti ti-arrow-right" style="font-size:14px"></i>Accéder au terminal
     </button>
+    <div class="setup-note">Clé gratuite sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>Stockée uniquement sur cet appareil.</div>
   </div>
 </div>
 
@@ -204,8 +179,7 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
     <div class="hl">
       <div id="dot" class="dot dot-live"></div>
       <span class="htitle">TERMINAL IA</span>
-      <span class="hbadge">v3</span>
-      <span id="provider-badge" style="background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.4);color:#ca8a04;font-size:9px;padding:1px 7px;border-radius:5px;font-weight:600;cursor:pointer" onclick="showSettings()">Gemini · 0/1500</span>
+      <span class="hbadge">v2</span>
     </div>
     <div class="hr">
       <button class="hbtn" id="auto-btn" onclick="toggleAuto()">
@@ -271,7 +245,6 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
   <div class="sheet">
     <div class="handle"></div>
     <div class="stitle">Paramètres</div>
-
     <div class="home-box">
       <div style="font-size:12px;font-weight:600;color:var(--wait)"><i class="ti ti-device-mobile" style="font-size:13px;vertical-align:-1px;margin-right:5px"></i>Ajouter à l'écran d'accueil</div>
       <div class="home-steps">
@@ -281,26 +254,9 @@ body{background:var(--bg);color:var(--t1);font-family:'SF Mono','Fira Code','Cou
         Menu (⋮) → <strong style="color:var(--t1)">Ajouter à l'écran d'accueil</strong>
       </div>
     </div>
-
-    <div style="font-size:12px;font-weight:600;color:var(--t1)">Fournisseur actif</div>
-    <div style="display:flex;gap:0;border:1px solid var(--bd2);border-radius:10px;overflow:hidden">
-      <button onclick="switchProvider('gemini')" id="cfg-tab-gemini" style="flex:1;padding:10px;border:none;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s">
-        <i class="ti ti-brand-google" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Gemini Gratuit
-      </button>
-      <button onclick="switchProvider('anthropic')" id="cfg-tab-anthropic" style="flex:1;padding:10px;border:none;border-left:1px solid var(--bd2);font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s">
-        <i class="ti ti-robot" style="font-size:12px;vertical-align:-1px;margin-right:4px"></i>Anthropic
-      </button>
-    </div>
-
-    <div style="font-size:12px;font-weight:600;color:var(--t1)">Clé Gemini (Google AI Studio)</div>
-    <div class="api-row"><input type="password" id="gemini-key-change" placeholder="AIza..." class="fi"></div>
-    <div style="font-size:10px;color:var(--t3)">1 500 scans/jour gratuits · <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--wait)">Obtenir la clé</a></div>
-
-    <div style="font-size:12px;font-weight:600;color:var(--t1)">Clé Anthropic</div>
-    <div class="api-row"><input type="password" id="anthropic-key-change" placeholder="sk-ant-api03-..." class="fi"></div>
-    <div style="font-size:10px;color:var(--t3)"><a href="https://console.anthropic.com" target="_blank" style="color:var(--wait)">console.anthropic.com</a></div>
-
-    <button class="btn-p" onclick="saveKeys()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer les clés</button>
+    <div style="font-size:12px;font-weight:600;color:var(--t1)">Changer la clé API</div>
+    <div class="api-row"><input type="password" id="key-change" placeholder="sk-ant-api03-..." class="fi"></div>
+    <button class="btn-p" onclick="changeKey()"><i class="ti ti-device-floppy" style="font-size:14px"></i>Enregistrer</button>
     <button class="btn-p" style="background:var(--bg3);color:var(--t2);border:1px solid var(--bd)" onclick="requestNotif()"><i class="ti ti-bell" style="font-size:14px"></i>Activer les notifications</button>
     <button class="close-btn" onclick="closeSheet('cfg-overlay')">Fermer</button>
   </div>
@@ -327,172 +283,78 @@ const GRC={LOW:{lbl:"Faible",c:"#22c55e"},MODERATE:{lbl:"Modéré",c:"#f59e0b"},
 const GIC={POSITIVE:{lbl:"Géo+",c:"#22c55e"},NEUTRAL:{lbl:"Neutre",c:"#4a5a78"},NEGATIVE:{lbl:"Géo−",c:"#ef4444"}};
 const FSC={OK:{c:"#22c55e",ic:"ti-circle-check"},WARNING:{c:"#f59e0b",ic:"ti-alert-triangle"},DANGER:{c:"#ef4444",ic:"ti-circle-x"}};
 const SNRC={LOW:{c:"#22c55e",lbl:"STN faible"},MODERATE:{c:"#f59e0b",lbl:"STN modéré"},HIGH:{c:"#ef4444",lbl:"STN élevé"}};
-const TICKERS=["MRVL","MU","INTC","ABNB","PLTR"];
+function getActiveTickers(){return(S.data&&S.data.stocks)?S.data.stocks.map(s=>s.ticker):["NVDA","ABNB","SMCI","PLTR","MU"];}
 
 // ══ STATE ══
-let S={
-  provider:"gemini", // "gemini" | "anthropic"
-  geminiKey:"", anthropicKey:"",
-  data:null, alerts:{}, log:[], logOpen:false,
-  autoOn:false, ivSec:600, cd:600, loading:false, scans:0,
-  dailyDate:"", dailyCount:0
-};
+let S={key:"",data:null,alerts:{},log:[],logOpen:false,autoOn:false,ivSec:600,cd:600,loading:false,scans:0};
 
 // ══ PERSIST ══
-function save(){
-  try{
-    localStorage.setItem("tt3_prov",S.provider);
-    localStorage.setItem("tt3_gk",S.geminiKey);
-    localStorage.setItem("tt3_ak",S.anthropicKey);
-    localStorage.setItem("tt3_a",JSON.stringify(S.alerts));
-    localStorage.setItem("tt3_d",JSON.stringify(S.data));
-    localStorage.setItem("tt3_l",JSON.stringify(S.log.slice(0,50)));
-    localStorage.setItem("tt3_dd",S.dailyDate);
-    localStorage.setItem("tt3_dc",S.dailyCount);
-  }catch(e){}
-}
-function load(){
-  S.provider=localStorage.getItem("tt3_prov")||"gemini";
-  S.geminiKey=localStorage.getItem("tt3_gk")||"";
-  S.anthropicKey=localStorage.getItem("tt3_ak")||"";
-  S.alerts=JSON.parse(localStorage.getItem("tt3_a")||"{}");
-  const d=localStorage.getItem("tt3_d");if(d)try{S.data=JSON.parse(d);}catch(e){}
-  S.log=JSON.parse(localStorage.getItem("tt3_l")||"[]");
-  S.dailyDate=localStorage.getItem("tt3_dd")||"";
-  S.dailyCount=parseInt(localStorage.getItem("tt3_dc")||"0")||0;
-  const today=new Date().toDateString();
-  if(S.dailyDate!==today){S.dailyDate=today;S.dailyCount=0;}
-  TICKERS.forEach(t=>{if(!S.alerts[t])S.alerts[t]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""};});
-}
-function activeKey(){return S.provider==="gemini"?S.geminiKey:S.anthropicKey;}
-function dailyLimit(){return S.provider==="gemini"?1500:999;}
+function initAlertsForStocks(stocks){(stocks||[]).forEach(s=>{if(!S.alerts[s.ticker])S.alerts[s.ticker]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""};});}
+function save(){try{localStorage.setItem("tt2_k",S.key);localStorage.setItem("tt2_a",JSON.stringify(S.alerts));localStorage.setItem("tt2_d",JSON.stringify(S.data));localStorage.setItem("tt2_l",JSON.stringify(S.log.slice(0,50)));}catch(e){}}
+function load(){S.key=localStorage.getItem("tt2_k")||"";S.alerts=JSON.parse(localStorage.getItem("tt2_a")||"{}");const d=localStorage.getItem("tt2_d");if(d)try{S.data=JSON.parse(d);}catch(e){}S.log=JSON.parse(localStorage.getItem("tt2_l")||"[]");TICKERS.forEach(t=>{if(!S.alerts[t])S.alerts[t]={aboveOn:false,above:0,belowOn:false,below:0,sigOn:false,lastSig:""}});}
 
 // ══ SEED DATA avec filtres ══
 const DEF_FILTERS={extension:{status:"WARNING",label:"Données en cours..."},consensus:{status:"WARNING",label:"Données en cours..."},sector_precedent:{status:"WARNING",label:"AVGO −13% post-earnings"},options_iv:{status:"OK",label:"Normal"},insiders:{status:"WARNING",label:"À vérifier"}};
 const SEED={
-  market_context:{sp500:"7 396",vix:"19.5",oil_brent:"$78",geopolitical_risk:"MODERATE",
-    geo_summary:"Accord US-Iran signé le 17/06 — négociations à Genève. Détroit d'Ormuz partiellement rouvert, 60 jours pour accord final.",
-    market_bias:"RISK_ON",key_event_today:"Earnings MU ce soir (24/06) + Talks US-Iran"},
+  market_context:{sp500:"7 396",vix:"15.5",oil_brent:"$77",geopolitical_risk:"MODERATE",
+    geo_summary:"Accord US-Iran signé le 17/06. Négociations à Genève. VIX à 15 = marché très calme.",
+    market_bias:"RISK_ON",key_event_today:"MU Q3 Earnings ce soir (24/06) + Talks US-Iran",
+    top_sectors:"Semiconducteurs IA, Voyage & Loisirs, Serveurs IA"},
   stocks:[
-    {ticker:"MRVL",name:"Marvell Technology",action:"AVOID",urgency:"IMMEDIATE",
-     current_price:"~265$",entry:"<240$ seulement",stop_loss:"225$",tp1:"280$",tp2:"310$",
-     catalyst:"Post-inclusion S&P 500 : sell-the-news brutal −14.7% en 24h",
-     geo_impact:"NEUTRAL",conviction:1,
-     reason:"Extension +240% YTD. Cours 10%+ au-dessus cible médiane analystes ($238). Insiders vendeurs nets. Filtre extension CRITIQUE.",
-     alert:"−14.7% en 24h post-inclusion S&P 500 — vendre si position ouverte",
-     warning:"3 filtres en DANGER : extension, consensus, insiders. NE PAS acheter sous ce profil de risque.",
-     filters:{
-       extension:{status:"DANGER",label:"+240% YTD — Sur-extension critique"},
-       consensus:{status:"DANGER",label:"Cours 10%+ au-dessus cible médiane $238"},
-       sector_precedent:{status:"WARNING",label:"AVGO −13% post-earnings juin 2026"},
-       options_iv:{status:"OK",label:"IV normale (pas d'earnings proches)"},
-       insiders:{status:"DANGER",label:"Ventes nettes −$2.7M sur 12 mois"}
-     },
-     max_position_pct:0,pre_earnings:false,earnings_date:null,sell_news_risk:"HIGH",composite_risk:9},
-    {ticker:"MU",name:"Micron Technology",action:"BINARY_BET",urgency:"TODAY",
-     current_price:"~1 198$",entry:"Attendre résultats d'abord",stop_loss:"890$",tp1:"1 350$",tp2:"1 500$",
-     catalyst:"Q3 Earnings CE SOIR 24/06 — résultats après clôture + guidance Q4",
-     geo_impact:"NEUTRAL",conviction:3,
-     reason:"PARI BINAIRE. Extension +297% YTD. IV ~120%. Dan Niles a réduit l'exposition chips. Entrer seulement POST-earnings si guidance relève les prévisions.",
-     alert:"PARI BINAIRE — max 5% du portefeuille uniquement. Risque de −30% si déception.",
-     warning:"IV options 120% = IV crush post-earnings. Ne pas acheter des calls. Si trade : entrer APRÈS la publication des résultats ce soir.",
-     filters:{
-       extension:{status:"DANGER",label:"+297% YTD — Extension extrême"},
-       consensus:{status:"OK",label:"Cible médiane $945 — cours au-dessus mais IV déjà pricée"},
-       sector_precedent:{status:"DANGER",label:"AVGO −13% post-earnings : 'sell the news' identifié"},
-       options_iv:{status:"DANGER",label:"IV ~120% = risque IV crush sévère post-earnings"},
-       insiders:{status:"OK",label:"Pas de ventes significatives récentes"}
-     },
-     max_position_pct:5,pre_earnings:true,earnings_date:"24 juin après clôture",sell_news_risk:"HIGH",composite_risk:8},
-    {ticker:"INTC",name:"Intel Corporation",action:"WAIT",urgency:"THIS_WEEK",
-     current_price:"~134$",entry:"120-125$ uniquement (repli obligatoire)",stop_loss:"110$",tp1:"145$",tp2:"158$",
-     catalyst:"Partenariat Apple non confirmé + avantage géopolitique fabs US",
-     geo_impact:"POSITIVE",conviction:2,
-     reason:"ATH $141 atteint le 22/06 sur rumeur Apple non confirmée. +50%+ en 5 jours = extension extrême à court terme. Attendre confirmation officielle et repli.",
-     alert:"ATH atteint le 22/06 à 141.45$ sur catalyseur non confirmé — risque de −15 à −20% si démenti",
-     warning:"Apple ou Intel n'ont pas confirmé officiellement le deal. Une confirmation officielle = signal d'entrée. Un démenti = couper immédiatement.",
-     filters:{
-       extension:{status:"DANGER",label:"+50%+ en 5 jours sur rumeur non confirmée"},
-       consensus:{status:"WARNING",label:"Cours à l'ATH, consensus neutre sur Intel"},
-       sector_precedent:{status:"WARNING",label:"Secteur chips sous pression (Dan Niles, AVGO)"},
-       options_iv:{status:"WARNING",label:"IV élevée liée à l'incertitude du deal Apple"},
-       insiders:{status:"WARNING",label:"Pas d'achats insiders sur le deal Apple détectés"}
-     },
-     max_position_pct:5,pre_earnings:false,earnings_date:"23 juillet",sell_news_risk:"HIGH",composite_risk:7},
-    {ticker:"ABNB",name:"Airbnb",action:"HOLD",urgency:"TODAY",
-     current_price:"~140$",entry:"135-142$",stop_loss:"128$",tp1:"155$",tp2:"165$",
-     catalyst:"FIFA World Cup 2026 jusqu'au 19/07 + pétrole en baisse = voyages plus accessibles",
-     geo_impact:"POSITIVE",conviction:3,
-     reason:"Catalyseur World Cup solide. Pas d'extension majeure. Mais CEO et co-fondateur vendeurs. Surveiller si pétrole remonte au-dessus de 85$.",
-     alert:null,
-     warning:"CEO Chesky et co-fondateur Gebbia ont vendu ~47M$ de titres récemment. Ventes initiales à surveiller.",
-     filters:{
-       extension:{status:"OK",label:"Performance YTD normale, pas d'extension critique"},
-       consensus:{status:"OK",label:"Cours en dessous cible médiane analystes ($156)"},
-       sector_precedent:{status:"OK",label:"Pas de précédent négatif dans le secteur voyage"},
-       options_iv:{status:"OK",label:"IV normale hors earnings (prochains : 12 août)"},
-       insiders:{status:"WARNING",label:"CEO +co-fondateur vendeurs nets ~$47M récemment"}
-     },
-     max_position_pct:15,pre_earnings:false,earnings_date:"12 août",sell_news_risk:"LOW",composite_risk:3},
-    {ticker:"PLTR",name:"Palantir Technologies",action:"WAIT",urgency:"THIS_WEEK",
-     current_price:"~128$",entry:"120-125$ si pivot confirmé",stop_loss:"115$",tp1:"145$",tp2:"165$",
-     catalyst:"Revenus Q1 +85% YoY + Google Cloud + défense en hausse — MAIS contrat majeur perdu hier",
-     geo_impact:"POSITIVE",conviction:2,
-     reason:"52-week LOW atteint hier (22/06) suite à perte d'un contrat majeur. Downtrend technique non cassé. DCF suggère valeur intrinsèque $136 — légèrement sous-évalué. Attendre reversal technique.",
-     alert:"Nouveau 52-week LOW atteint le 22/06 après perte d'un contrat majeur",
-     warning:"Tendance baissière active. −27% YTD. Ne pas acheter un couteau qui tombe — attendre cassure des 137$ et confirmation du retournement.",
-     filters:{
-       extension:{status:"OK",label:"−27% YTD — Pas d'extension (au contraire)"},
-       consensus:{status:"OK",label:"Cible analystes $182 = +42% potentiel. UBS $200."},
-       sector_precedent:{status:"WARNING",label:"Perte contrat majeur signalée le 22/06"},
-       options_iv:{status:"OK",label:"IV normale, earnings le 10 août"},
-       insiders:{status:"WARNING",label:"ARK (Cathie Wood) a réduit position PLTR récemment"}
-     },
-     max_position_pct:10,pre_earnings:false,earnings_date:"10 août",sell_news_risk:"MODERATE",composite_risk:4},
+    {ticker:"NVDA",name:"NVIDIA Corporation",action:"BUY",urgency:"TODAY",current_price:"~209$",entry:"205-212$",stop_loss:"195$",tp1:"232$",tp2:"265$",catalyst:"Vera Rubin en production. Correction -11% depuis ATH $236. 43% sous cible analystes.",geo_impact:"NEUTRAL",conviction:4,reason:"62 analystes Strong Buy, cible $298 (+43%). P/E 32x pour +65% revenus. Earnings le 25 août.",alert:null,warning:null,filters:{extension:{status:"OK",label:"Correction -11% depuis ATH — pas de sur-extension"},consensus:{status:"OK",label:"Cible consensus $298 = +43% depuis cours actuel"},sector_precedent:{status:"WARNING",label:"AVGO a signalé prudence dépenses AI — risque modéré"},options_iv:{status:"OK",label:"Earnings le 25 août — aucun risque IV immédiat"},insiders:{status:"OK",label:"Pas d'alerte ventes initiés récente"}},max_position_pct:20,pre_earnings:false,earnings_date:"25 août 2026",sell_news_risk:"LOW",composite_risk:2},
+    {ticker:"ABNB",name:"Airbnb, Inc.",action:"BUY",urgency:"TODAY",current_price:"~140$",entry:"136-142$",stop_loss:"127$",tp1:"155$",tp2:"165$",catalyst:"FIFA World Cup 2026 jusqu'au 19/07 + pétrole en baisse = bookings en hausse.",geo_impact:"POSITIVE",conviction:4,reason:"Cours sous cible $156 (+11%). FCF $4.5Md, marge 36%. Peace deal bénéficie directement.",alert:null,warning:"CEO Chesky et co-fondateur vendeurs nets ~$47M récemment.",filters:{extension:{status:"OK",label:"Performance YTD normale — zéro extension"},consensus:{status:"OK",label:"Cible médiane $156 — cours 11% en dessous"},sector_precedent:{status:"OK",label:"Pas de précédent négatif secteur voyage"},options_iv:{status:"OK",label:"IV normale, earnings le 12 août"},insiders:{status:"WARNING",label:"CEO + co-fondateur vendeurs nets ~$47M récemment"}},max_position_pct:15,pre_earnings:false,earnings_date:"12 août 2026",sell_news_risk:"LOW",composite_risk:2},
+    {ticker:"SMCI",name:"Super Micro Computer",action:"WAIT",urgency:"THIS_WEEK",current_price:"~32$",entry:">36$ clôture avec volume",stop_loss:"29$",tp1:"40$",tp2:"48$",catalyst:"Upgrade GF Securities Buy cible $48 (+55%). Lancement Vera Rubin NVL4. $39Md de commandes.",geo_impact:"NEUTRAL",conviction:3,reason:"-45% depuis ATH $62. P/E 16x. Overhang financier clarifié. Entrée conditionnelle > $36.",alert:"Entrer UNIQUEMENT sur clôture > 36$ avec volume > moyenne",warning:"7 ventes initiés $31M + class actions en cours. Max 10% portefeuille.",filters:{extension:{status:"OK",label:"-45% depuis ATH — rebond potentiel"},consensus:{status:"OK",label:"GF Securities $48 = +55% upside"},sector_precedent:{status:"OK",label:"Pas de précédent négatif récent"},options_iv:{status:"OK",label:"IV normale, earnings le 11 août"},insiders:{status:"DANGER",label:"7 ventes initiés $31M + class actions"}},max_position_pct:10,pre_earnings:false,earnings_date:"11 août 2026",sell_news_risk:"MODERATE",composite_risk:5},
+    {ticker:"PLTR",name:"Palantir Technologies",action:"WAIT",urgency:"THIS_WEEK",current_price:"~128$",entry:">137$ pivot confirmé",stop_loss:"116$",tp1:"145$",tp2:"165$",catalyst:"Revenus Q1 +85% YoY + Google Cloud + budgets défense en forte hausse.",geo_impact:"POSITIVE",conviction:3,reason:"52-week LOW le 22/06. DCF $136. Cible analystes $182 (+42%). Attendre pivot > $137.",alert:"52-week LOW le 22/06 — attendre reversal > $137",warning:"Downtrend actif. ARK a réduit position. Ne pas acheter en chute libre.",filters:{extension:{status:"OK",label:"-27% YTD — oversold, pas d'extension"},consensus:{status:"OK",label:"Cible $182 = +42% potentiel. UBS $200."},sector_precedent:{status:"WARNING",label:"Perte contrat majeur signalée le 22/06"},options_iv:{status:"OK",label:"Earnings le 10 août — IV normale"},insiders:{status:"WARNING",label:"ARK (Cathie Wood) a réduit position"}},max_position_pct:12,pre_earnings:false,earnings_date:"10 août 2026",sell_news_risk:"MODERATE",composite_risk:4},
+    {ticker:"MU",name:"Micron Technology",action:"BINARY_BET",urgency:"IMMEDIATE",current_price:"~1 211$",entry:"Attendre résultats ce soir — décider demain",stop_loss:"1 050$",tp1:"1 350$",tp2:"1 500$",catalyst:"Q3 Earnings CE SOIR. Consensus $34.66Md revenus + $19.95 BPA. 5 beats consécutifs.",geo_impact:"NEUTRAL",conviction:2,reason:"PARI BINAIRE. Si beat + guidance relevée → entrer demain max 8%. Sinon éviter.",alert:"RÉSULTATS CE SOIR — ne pas entrer avant. Si beat → BUY demain matin max 8%.",warning:"Extension +297% YTD. IV 120% = risque IV crush. Précédent AVGO -13%.",filters:{extension:{status:"DANGER",label:"+297% YTD — sur-extension extrême"},consensus:{status:"OK",label:"Rosenblatt $1200 — upside potentiel"},sector_precedent:{status:"DANGER",label:"AVGO -13% post-earnings = précédent sell-the-news"},options_iv:{status:"DANGER",label:"IV ~120% + earnings CE SOIR"},insiders:{status:"OK",label:"Pas de ventes initiés significatives"}},max_position_pct:8,pre_earnings:true,earnings_date:"24 juin 2026 après clôture",sell_news_risk:"HIGH",composite_risk:8},
   ],
-  top_action:"Ne pas acheter MRVL ou MU maintenant — attendre résultats MU ce soir, entrer si guidance relève. PLTR et ABNB sont les setups les plus propres.",
-  avoid:"Éviter toute position full-size sur des actions en +200%+ YTD sans pullback confirmé",
-  geopolitical_alert:"Négociations US-Iran à Genève — si rupture: couper MRVL et MU dans les 24h, PLTR et ABNB résistent mieux",
+  top_action:"Acheter NVDA (correction -11% depuis ATH) + ABNB (World Cup + peace deal). Attendre confirmations sur SMCI (>36$) et PLTR (>137$).",
+  avoid:"Ne pas acheter MU avant les résultats de ce soir. Éviter MRVL après -14.7% post-inclusion S&P500.",
+  geopolitical_alert:"Négociations US-Iran à Genève AUJOURD'HUI — si rupture: couper NVDA et SMCI dans les 24h.",
   events:[
-    {date:"24 juin",    ticker:"MU",  event:"Q3 Earnings après clôture — BINAIRE"},
-    {date:"17-18 juil.",ticker:"ALL", event:"OpEx trimestrielle — volatilité accrue"},
-    {date:"19 juil.",   ticker:"ABNB",event:"Finale FIFA World Cup"},
-    {date:"23 juil.",   ticker:"INTC",event:"Q2 Earnings — guetter conf. Apple deal"},
-    {date:"29-30 juil.",ticker:"ALL", event:"FOMC — décision taux Fed"},
-    {date:"10 août",    ticker:"PLTR",event:"Q2 Earnings"},
-    {date:"12 août",    ticker:"ABNB",event:"Q2 Earnings"},
+    {date:"24 juin (soir)",ticker:"MU",  event:"Q3 Earnings après clôture — BINAIRE"},
+    {date:"17-18 juil.",   ticker:"ALL", event:"OpEx trimestrielle — volatilité accrue"},
+    {date:"19 juil.",      ticker:"ABNB",event:"Finale FIFA World Cup"},
+    {date:"10 août",       ticker:"PLTR",event:"Q2 Earnings"},
+    {date:"11 août",       ticker:"SMCI",event:"Q4 Earnings"},
+    {date:"12 août",       ticker:"ABNB",event:"Q2 Earnings"},
+    {date:"25 août",       ticker:"NVDA",event:"Q2 FY27 Earnings"},
   ],
   last_updated:new Date().toISOString()
 };
 
-// ══ PROMPT AMÉLIORÉ ══
-const PROMPT=`Tu es le meilleur trader quantitatif au monde avec des règles STRICTES anti-perte. Recherche MAINTENANT sur le web pour MRVL, MU, INTC, ABNB, PLTR:
 
-DONNÉES OBLIGATOIRES:
-- Prix actuel et performance sur 3 mois ET YTD
-- Cible consensus analystes ET % au-dessus/dessous de cette cible
-- % analystes en Buy (>90% = risque contrarian)
-- Ventes/achats initiés nets sur 30 derniers jours (en $)
-- Volatilité implicite options (IV en %)
-- Un concurrent a-t-il chuté >8% post-earnings ces 30 derniers jours?
-- Date des prochains earnings
-- Situation géopolitique US-Iran et pétrole Brent
-- S&P500 et VIX actuels
+// ══ PROMPT DYNAMIQUE — SCREENING ══
+const PROMPT=`Tu es le meilleur trader quantitatif au monde avec des règles STRICTES anti-perte.
 
-FILTRES OBLIGATOIRES (applique systématiquement et sans exception):
-1. EXTENSION: si +>50% sur 3 mois → filtre DANGER, action max WAIT ou BINARY_BET, JAMAIS BUY
-2. CONSENSUS: si cours >10% au-dessus cible médiane → filtre DANGER
-3. PRECEDENT: si concurrent a chuté >8% post-earnings récemment → filtre WARNING ou DANGER
-4. OPTIONS_IV: si IV >80% OU earnings dans 7 jours → DANGER, action = BINARY_BET max 5%
-5. INSIDERS: si ventes nettes >$1M → WARNING; >$5M → DANGER
+MISSION: Trouve les 5 MEILLEURES actions à acheter MAINTENANT pour 10%+ de gain en 1 à 8 semaines.
+
+ÉTAPE 1 — CONTEXTE MARCHÉ (recherche web maintenant):
+Trouve: S&P500 actuel, VIX, pétrole Brent, situation US-Iran/détroit Ormuz, secteurs en rotation haussière.
+
+ÉTAPE 2 — SCREENING DES MEILLEURES OPPORTUNITÉS (recherche web):
+Identifie les meilleures opportunités parmi:
+A) Stocks avec cluster d'upgrades analystes cette semaine (plusieurs banques relèvent les cibles simultanément)
+B) Stocks en correction depuis ATH (-10% à -35%) avec fondamentaux intacts et catalyseur identifié dans 4-8 semaines
+C) Breakouts techniques récents sur volumes élevés (cassure de résistance majeure)
+D) Catalyseur daté précis dans 4-8 semaines (annonce produit, partenariat, FDA approval, index inclusion...)
+E) Insider buying significatif récent (>$1M sur 30 jours = signal fort)
+
+FILTRES ÉLIMINATOIRES — SANS EXCEPTION:
+1. EXTENSION: si +50% sur 3 mois → max WAIT ou BINARY_BET, JAMAIS BUY direct
+2. CONSENSUS: cours doit être EN DESSOUS de la cible médiane analystes (upside réel confirmé)
+3. PRÉCÉDENT: concurrent direct chuté >8% post-earnings les 30 derniers jours → WARNING ou AVOID
+4. IV/OPTIONS: si IV options >80% ou earnings dans 7 jours → BINARY_BET max 5% seulement
+5. INSIDERS: ventes nettes >5M$ sur 30 jours → AVOID ou WAIT, jamais BUY direct
 
 ACTIONS DISPONIBLES: BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET
-- BINARY_BET = pari binaire pre-earnings UNIQUEMENT, max 5% portefeuille, risque explicite
-- AVOID = 3+ filtres DANGER, ne pas toucher
-- REDUCE = réduire une position existante
+- BUY: passe 4-5 filtres
+- WAIT: 2-3 filtres en WARNING, conditions d'entrée explicites
+- BINARY_BET: pre-earnings IV élevée, max 5% portefeuille, risque explicite
 
-Retourne UNIQUEMENT du JSON brut (commence par { finit par }, aucun texte ni markdown):
-{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X"},"stocks":[{"ticker":"MRVL","name":"Marvell Technology","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":1,"reason":"X","alert":"X|null","warning":"X|null","filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":15,"pre_earnings":false,"earnings_date":"X|null","sell_news_risk":"LOW|MODERATE|HIGH","composite_risk":5},{"ticker":"MU","name":"Micron Technology","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":5,"pre_earnings":true,"earnings_date":"X","sell_news_risk":"X","composite_risk":7},{"ticker":"INTC","name":"Intel","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":2,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":5,"pre_earnings":false,"earnings_date":"X","sell_news_risk":"X","composite_risk":6},{"ticker":"ABNB","name":"Airbnb","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":15,"pre_earnings":false,"earnings_date":"X","sell_news_risk":"X","composite_risk":3},{"ticker":"PLTR","name":"Palantir","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":2,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":10,"pre_earnings":false,"earnings_date":"X","sell_news_risk":"X","composite_risk":4}],"top_action":"X","avoid":"X","geopolitical_alert":"X|null","events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
+Pour chaque action, vérifie: prix actuel exact, perf 3 mois + YTD, cible consensus analystes, % analysts en Buy, activité initiés 30j, IV options, date earnings, catalyseur précis daté.
+
+Retourne UNIQUEMENT du JSON brut (commence par { finit par }, zéro texte ni markdown):
+{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X","top_sectors":"X"},"stocks":[{"ticker":"TICKER1","name":"Nom complet 1","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":5,"reason":"X","alert":"X|null","warning":"X|null","filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":20,"pre_earnings":false,"earnings_date":"X|null","sell_news_risk":"LOW|MODERATE|HIGH","composite_risk":2},{"ticker":"TICKER2","name":"Nom complet 2","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":4,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":15,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":3},{"ticker":"TICKER3","name":"Nom 3","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":12,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":4},{"ticker":"TICKER4","name":"Nom 4","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":3,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":10,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":5},{"ticker":"TICKER5","name":"Nom 5","action":"X","urgency":"X","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"X","conviction":2,"reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"X","label":"X"},"consensus":{"status":"X","label":"X"},"sector_precedent":{"status":"X","label":"X"},"options_iv":{"status":"X","label":"X"},"insiders":{"status":"X","label":"X"}},"max_position_pct":8,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"X","composite_risk":6}],"top_action":"X","avoid":"X","geopolitical_alert":"X|null","events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
 
 // ══ HELPERS ══
 const ge=id=>document.getElementById(id);
@@ -502,39 +364,13 @@ const stars=n=>"★".repeat(Math.min(5,n|0))+"☆".repeat(5-Math.min(5,n|0));
 const riskColor=r=>{if(r>=8)return"#ef4444";if(r>=5)return"#f59e0b";return"#22c55e";};
 
 // ══ INIT ══
-let _setupProvider="gemini";
-function selectProvider(p){
-  _setupProvider=p;
-  const gs=ge("section-gemini"),as=ge("section-anthropic");
-  const gt=ge("tab-gemini"),at=ge("tab-anthropic");
-  if(p==="gemini"){gs.style.display="block";as.style.display="none";gt.style.background="rgba(234,179,8,.15)";gt.style.color="#ca8a04";at.style.background="var(--bg)";at.style.color="var(--t3)";}
-  else{gs.style.display="none";as.style.display="block";at.style.background="rgba(96,165,250,.15)";at.style.color="var(--wait)";gt.style.background="var(--bg)";gt.style.color="var(--t3)";}
-}
-function switchProvider(p){
-  S.provider=p;save();updateProviderUI();
-}
-function updateProviderUI(){
-  const gk=S.provider==="gemini";
-  const cg=ge("cfg-tab-gemini"),ca=ge("cfg-tab-anthropic");
-  if(!cg||!ca)return;
-  if(gk){cg.style.background="rgba(234,179,8,.15)";cg.style.color="#ca8a04";ca.style.background="var(--bg3)";ca.style.color="var(--t3)";}
-  else{ca.style.background="rgba(96,165,250,.15)";ca.style.color="var(--wait)";cg.style.background="var(--bg3)";cg.style.color="var(--t3)";}
-  const badge=ge("provider-badge");
-  if(badge)badge.textContent=gk?("Gemini · "+S.dailyCount+"/"+dailyLimit()):("Anthropic · "+S.dailyCount);
-}
-window.onload=()=>{load();if(!activeKey()){ge("setup").style.display="flex";selectProvider(S.provider);}else{startApp();}};
-function saveKey(){
-  const gv=ge("gemini-key-input").value.trim();
-  const av=ge("anthropic-key-input").value.trim();
-  if(_setupProvider==="gemini"){if(!gv)return;S.geminiKey=gv;}
-  else{if(!av)return;S.anthropicKey=av;}
-  S.provider=_setupProvider;save();ge("setup").style.display="none";startApp();
-}
-function startApp(){ge("app").style.display="block";renderData(S.data||SEED);renderLog();requestNotif();updateProviderUI();}
+window.onload=()=>{load();if(!S.key){ge("setup").style.display="flex";}else{startApp();}};
+function saveKey(){const v=ge("key-input").value.trim();if(!v)return;S.key=v;save();ge("setup").style.display="none";startApp();}
+function startApp(){ge("app").style.display="block";initAlertsForStocks((S.data||SEED).stocks||[]);renderData(S.data||SEED);renderLog();requestNotif();}
 
 // ══ NOTIFICATIONS & SOUND ══
 async function requestNotif(){if("Notification"in window){const p=await Notification.requestPermission();S.notifGranted=(p==="granted");}}
-function notify(title,body){if(S.notifGranted){try{new Notification(title,{body});}catch(e){}}playSound();S.log.unshift({time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),ticker:TICKERS.find(t=>title.includes(t))||"–",msg:body});if(S.log.length>50)S.log.pop();renderLog();save();}
+function notify(title,body){if(S.notifGranted){try{new Notification(title,{body});}catch(e){}}playSound();S.log.unshift({time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),ticker:(title.match(/[A-Z]{2,5}/)||["–"])[0],msg:body});if(S.log.length>50)S.log.pop();renderLog();save();}
 function playSound(){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[880,660,440].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type="sine";o.frequency.setValueAtTime(f,ctx.currentTime+i*.15);g.gain.setValueAtTime(.15,ctx.currentTime+i*.15);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.15+.3);o.start(ctx.currentTime+i*.15);o.stop(ctx.currentTime+i*.15+.3);});}catch(e){}}
 function renderLog(){const w=ge("logwrap"),l=ge("loglist"),c=ge("log-cnt");if(!S.log.length){w.style.display="none";return;}w.style.display="block";if(c)c.textContent=S.log.length+" alerte"+(S.log.length>1?"s":"");if(l)l.innerHTML=S.log.slice(0,10).map(e=>`<div class="logitem"><span class="logtime">${e.time}</span><span class="logticker">${e.ticker}</span><span class="logmsg">${e.msg}</span></div>`).join("");if(S.logOpen)l.classList.add("open");}
 function toggleLog(){S.logOpen=!S.logOpen;ge("loglist").classList.toggle("open",S.logOpen);const ch=ge("log-chev");if(ch)ch.style.transform=S.logOpen?"rotate(180deg)":"";}
@@ -553,33 +389,8 @@ function updateCD(){const t=ge("cd-txt"),f=ge("cd-fill");if(t)t.textContent=fmtC
 // ══ API SCAN ══
 function parseData(txt){const t=[()=>JSON.parse(txt),()=>{const m=txt.match(/```json\s*([\s\S]*?)\s*```/);if(m)return JSON.parse(m[1]);throw 0;},()=>{const m=txt.match(/\{[\s\S]*"market_context"[\s\S]*\}/);if(m)return JSON.parse(m[0]);throw 0;},()=>{const s=txt.indexOf("{"),e=txt.lastIndexOf("}");if(s>-1&&e>s)return JSON.parse(txt.slice(s,e+1));throw 0;}];for(const fn of t){try{return fn();}catch{}}throw new Error("Format JSON invalide");}
 const STATS=["Recherche prix et volumes en temps réel...","Calcul des 5 filtres anti-perte...","Analyse IV options et earnings...","Vérification activité initiés...","Évaluation risques géopolitiques...","Finalisation des signaux..."];
-async function callGemini(){
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${S.geminiKey}`;
-  const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:PROMPT}],role:"user"}],tools:[{google_search:{}}],generationConfig:{temperature:0.1,maxOutputTokens:8192}})});
-  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"Gemini HTTP "+res.status);}
-  const data=await res.json();
-  const parts=data.candidates?.[0]?.content?.parts||[];
-  const txt=parts.filter(p=>p.text).map(p=>p.text).join("");
-  if(!txt)throw new Error("Gemini: réponse vide");
-  return txt;
-}
-
-async function callAnthropic(){
-  let msgs=[{role:"user",content:PROMPT}],txt="";
-  for(let r=0;r<8;r++){
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.anthropicKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:5000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:msgs})});
-    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"HTTP "+res.status);}
-    const r2=await res.json(),c=r2.content||[];
-    if(r2.stop_reason==="end_turn"){txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");break;}
-    if(r2.stop_reason==="tool_use"){msgs.push({role:"assistant",content:c});const tr=c.filter(b=>b.type==="tool_use").map(b=>({type:"tool_result",tool_use_id:b.id,content:"OK"}));if(tr.length)msgs.push({role:"user",content:tr});}
-    else{txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");if(txt)break;}
-  }
-  if(!txt)throw new Error("Aucune réponse Anthropic");
-  return txt;
-}
-
 async function runScan(){
-  if(S.loading||!activeKey())return;
+  if(S.loading||!S.key)return;
   S.loading=true;
   const btn=ge("scan-btn"),dot=ge("dot"),sb=ge("sbar"),st=ge("sbar-txt");
   btn.disabled=true;btn.classList.add("scanning");dot.className="dot dot-scan";
@@ -587,14 +398,21 @@ async function runScan(){
   let si=0;st.textContent=STATS[0];
   const sint=setInterval(()=>{si=(si+1)%STATS.length;st.textContent=STATS[si];},3500);
   try{
-    const txt=S.provider==="gemini"?await callGemini():await callAnthropic();
+    let msgs=[{role:"user",content:PROMPT}],txt="";
+    for(let r=0;r<8;r++){
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":S.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:5000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:msgs})});
+      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"HTTP "+res.status);}
+      const r2=await res.json(),c=r2.content||[];
+      if(r2.stop_reason==="end_turn"){txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");break;}
+      if(r2.stop_reason==="tool_use"){msgs.push({role:"assistant",content:c});const tr=c.filter(b=>b.type==="tool_use").map(b=>({type:"tool_result",tool_use_id:b.id,content:"OK"}));if(tr.length)msgs.push({role:"user",content:tr});}
+      else{txt=c.filter(b=>b.type==="text").map(b=>b.text).join("");if(txt)break;}
+    }
     clearInterval(sint);
+    if(!txt)throw new Error("Aucune réponse");
     const p=parseData(txt);
+    initAlertsForStocks(p.stocks||[]);
     checkAlerts(p.stocks||[]);
-    const today=new Date().toDateString();
-    if(S.dailyDate!==today){S.dailyDate=today;S.dailyCount=0;}
-    S.dailyCount++;
-    S.data=p;S.scans++;renderData(p);save();updateProviderUI();
+    S.data=p;S.scans++;renderData(p);save();
     sb.style.display="none";dot.className=S.autoOn?"dot dot-auto":"dot dot-live";
     if(S.autoOn){S.cd=S.ivSec;updateCD();}
   }catch(e){
@@ -723,21 +541,8 @@ ge("al-overlay").classList.add("show");}
 function saveAlerts(){const t=curT;if(!t)return;S.alerts[t]={aboveOn:ge("tgl-above").classList.contains("on"),above:parseFloat(ge("inp-above").value)||0,belowOn:ge("tgl-below").classList.contains("on"),below:parseFloat(ge("inp-below").value)||0,sigOn:ge("tgl-sig").classList.contains("on"),lastSig:S.alerts[t]?.lastSig||""};save();closeSheet("al-overlay");if(S.data)renderData(S.data);}
 
 // ══ SETTINGS ══
-function showSettings(){
-  ge("cfg-overlay").classList.add("show");
-  const gkc=ge("gemini-key-change"),akc=ge("anthropic-key-change");
-  if(gkc)gkc.value=S.geminiKey;
-  if(akc)akc.value=S.anthropicKey;
-  updateProviderUI();
-}
-function saveKeys(){
-  const gv=ge("gemini-key-change").value.trim();
-  const av=ge("anthropic-key-change").value.trim();
-  if(gv)S.geminiKey=gv;
-  if(av)S.anthropicKey=av;
-  save();closeSheet("cfg-overlay");updateProviderUI();
-}
-function changeKey(){saveKeys();}
+function showSettings(){ge("cfg-overlay").classList.add("show");}
+function changeKey(){const v=ge("key-change").value.trim();if(!v)return;S.key=v;save();closeSheet("cfg-overlay");}
 function closeSheet(id,e){if(e&&e.target!==ge(id))return;ge(id).classList.remove("show");}
 </script>
 </body>
