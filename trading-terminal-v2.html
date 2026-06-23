@@ -730,11 +730,12 @@ function updateCD(){const t=$("cd-txt"),f=$("cd-fill");if(t)t.textContent=fCD(S.
 
 // ── MODEL LIST WITH FALLBACKS ─────────────────────
 // Tried in order — first success wins
+// Tried in order — 70b for quality, 8b as fallback if rate limited
 const FALLBACK_MODELS = [
-  "llama-3.1-8b-instant",
+  "llama-3.3-70b-versatile",   // ← PRIMARY: génère prix/entrée/stop complets
+  "llama-3.1-70b-versatile",   // ← fallback 70b
+  "llama-3.1-8b-instant",      // ← urgence seulement (JSON incomplet)
   "llama3-8b-8192",
-  "gemma2-9b-it",
-  "llama-3.3-70b-versatile",
 ];
 
 // ── DIAGNOSTIC TOOL ───────────────────────────────
@@ -871,37 +872,28 @@ function parseJ(txt) {
 // ── PROMPTS ───────────────────────────────────────
 const SCAN_MSGS=["Recherche prix et volumes...","Calcul du scoring /100...","Vérification des 5 filtres...","Analyse activité insiders...","Évaluation risques géopolitiques...","Classement par opportunité..."];
 
-const SCAN_PROMPT=`Tu es le meilleur trader quantitatif au monde spécialisé dans le swing trading court terme (1-8 semaines). Règles STRICTES anti-perte.
+const SCAN_PROMPT=`Expert trader quantitatif, swing trading 1-8 semaines. Règles STRICTES anti-perte.
 
-MISSION: Trouve les 5 MEILLEURES actions à trader MAINTENANT. Chaque action reçoit un SCORE /100.
+MISSION: 5 meilleures actions à trader MAINTENANT avec SCORE /100.
 
-ÉTAPE 1 — MARCHÉ: Recherche S&P500, VIX, Brent, sentiment, secteurs en rotation.
+MARCHÉ: Cherche S&P500, VIX, Brent, sentiment, secteurs.
 
-ÉTAPE 2 — SCREENING: Identifie les meilleures opportunités:
-A) Upgrades analystes groupés cette semaine
-B) Corrections -10% à -35% avec catalyseur daté dans 4-8 semaines
-C) Breakouts sur volumes >150% de la moyenne
-D) Insider buying >1M$ sur 30 jours
-E) Pre-earnings avec IV normale
-F) Momentum sectoriel fort
+SCREENING (choisir parmi):
+- Upgrades analystes groupés cette semaine
+- Correction -10% à -35% + catalyseur daté 4-8 semaines
+- Breakout volumes >150% moyenne
+- Insider buying >1M$ sur 30 jours
+- Pre-earnings IV normale
+- Momentum sectoriel fort
 
-ÉTAPE 3 — SCORING /100:
-- Qualité catalyseur (0-25): daté précis=25, vague=10
-- Upside potentiel (0-20): >30%=20, 15-30%=12, <15%=5
-- Filtres passés (0-20): 5/5=20, 4/5=15, 3/5=8
-- Conviction analystes (0-20): >80% Buy=20, 60-80%=12, <60%=5
-- Timing (0-15): fort=15, moyen=8
+SCORING /100: Catalyseur(0-25) + Upside(0-20) + Filtres(0-20) + Analystes(0-20) + Timing(0-15)
 
-FILTRES ÉLIMINATOIRES:
-1. EXTENSION: +50% sur 3 mois → max WAIT ou BINARY_BET
-2. CONSENSUS: cours EN DESSOUS de la cible médiane
-3. PRÉCÉDENT: concurrent chuté >8% post-earnings 30j → WARNING
-4. IV/OPTIONS: IV >80% ou earnings dans 7j → BINARY_BET max 5%
-5. INSIDERS: ventes nettes >5M$ → AVOID ou WAIT
+FILTRES: Extension>50%→WAIT, Cours>cible→WARNING, IV>80%→BINARY_BET, Ventes insiders>5M$→AVOID
 
-Trie du SCORE le plus élevé au plus bas.
-Retourne UNIQUEMENT du JSON brut:
-{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X","top_sectors":"X"},"stocks":[{"ticker":"X","name":"X","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"X","entry":"X","stop_loss":"X","tp1":"X","tp2":"X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":5,"score":87,"score_breakdown":"Catalyseur 22/25, Upside 18/20, Filtres 20/20, Analystes 17/20, Timing 10/15","reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":20,"pre_earnings":false,"earnings_date":null,"sell_news_risk":"LOW|MODERATE|HIGH","composite_risk":2}],"top_action":"X","avoid":"X","geopolitical_alert":null,"events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
+IMPORTANT: Pour chaque action, fournis OBLIGATOIREMENT: current_price(cours actuel $), entry(zone d'entrée $), stop_loss($), tp1($), tp2($). Trie par score décroissant.
+
+JSON brut uniquement:
+{"market_context":{"sp500":"X","vix":"X","oil_brent":"$X","geopolitical_risk":"LOW|MODERATE|HIGH|CRITICAL","geo_summary":"X","market_bias":"RISK_ON|NEUTRAL|RISK_OFF","key_event_today":"X","top_sectors":"X"},"stocks":[{"ticker":"X","name":"X","action":"BUY|SELL|HOLD|WAIT|REDUCE|AVOID|BINARY_BET","urgency":"IMMEDIATE|TODAY|THIS_WEEK|MONITOR","current_price":"$X","entry":"$X-$Y","stop_loss":"$X","tp1":"$X","tp2":"$X","catalyst":"X","geo_impact":"POSITIVE|NEUTRAL|NEGATIVE","conviction":5,"score":87,"score_breakdown":"X","reason":"X","alert":null,"warning":null,"filters":{"extension":{"status":"OK|WARNING|DANGER","label":"X"},"consensus":{"status":"OK|WARNING|DANGER","label":"X"},"sector_precedent":{"status":"OK|WARNING|DANGER","label":"X"},"options_iv":{"status":"OK|WARNING|DANGER","label":"X"},"insiders":{"status":"OK|WARNING|DANGER","label":"X"}},"max_position_pct":15,"pre_earnings":false,"earnings_date":null,"composite_risk":3}],"top_action":"X","avoid":"X","geopolitical_alert":null,"events":[{"date":"X","ticker":"X","event":"X"}],"last_updated":"ISO"}`;
 
 function pfPrompt(pos) {
   return `Tu es un gestionnaire de portefeuille expert. Analyse ce portefeuille et fournis une stratégie court terme précise.
@@ -1044,60 +1036,82 @@ function generateRecos() {
 
 // ── REAL-TIME PRICES (Yahoo Finance via CORS proxies) ──────
 // Tries multiple proxies in sequence until one works
-async function fetchRealPrices(tickers) {
-  if (!tickers.length) return {};
-  const syms = tickers.filter(Boolean).join(',');
-  // Yahoo Finance quote endpoint
-  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow`;
-  // CORS proxy list — tried in order
-  const proxies = [
-    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
-    `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`,
-  ];
-  for (const url of proxies) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(7000) });
-      if (!res.ok) continue;
-      let raw = await res.json();
-      // allorigins wraps result in 'contents'
-      if (raw.contents) raw = JSON.parse(raw.contents);
-      const quotes = raw?.quoteResponse?.result || [];
-      if (!quotes.length) continue;
-      const out = {};
-      quotes.forEach(q => {
-        const chgPct = q.regularMarketChangePercent || 0;
-        const chg    = q.regularMarketChange || 0;
-        const sign   = chgPct >= 0 ? '+' : '';
-        out[q.symbol] = {
-          priceStr:  `$${q.regularMarketPrice?.toFixed(2)}`,
-          priceNum:  q.regularMarketPrice,
-          changePct: `${sign}${chgPct.toFixed(2)}%`,
-          changeAmt: `${sign}${chg.toFixed(2)}`,
-          isUp:      chgPct >= 0,
-          high:      q.regularMarketDayHigh?.toFixed(2),
-          low:       q.regularMarketDayLow?.toFixed(2),
-          live:      true,
-        };
-      });
-      console.log(`[TradeAI] Prix live via ${url.split('?')[0]}`);
-      return out;
-    } catch(e) { /* try next proxy */ }
-  }
-  console.warn('[TradeAI] Impossible de récupérer les prix live');
-  return {};
+// ── REAL-TIME PRICES ─────────────────────────────
+// 3 sources without CORS proxy — tried in parallel, first wins
+
+// Source 1: Yahoo Finance chart API (native CORS, no key needed)
+async function fetchYahoo(ticker) {
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d&corsDomain=finance.yahoo.com`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  if (!res.ok) throw new Error("Yahoo "+res.status);
+  const d = await res.json();
+  const meta = d.chart?.result?.[0]?.meta;
+  if (!meta?.regularMarketPrice) throw new Error("Yahoo no data");
+  const price = meta.regularMarketPrice;
+  const prev  = meta.previousClose || meta.chartPreviousClose || price;
+  const chgPct = prev ? (price - prev) / prev * 100 : 0;
+  const sign   = chgPct >= 0 ? '+' : '';
+  return {
+    priceStr:  `$${price.toFixed(2)}`,
+    priceNum:  price,
+    changePct: `${sign}${chgPct.toFixed(2)}%`,
+    changeAmt: `${sign}${(price-prev).toFixed(2)}`,
+    isUp:  chgPct >= 0,
+    high:  meta.regularMarketDayHigh?.toFixed(2),
+    low:   meta.regularMarketDayLow?.toFixed(2),
+    live:  true, src: "Yahoo",
+  };
 }
 
-// Also fetch S&P500, VIX, Brent for the market bar
+// Source 2: Twelve Data (native CORS, demo key = 8 req/min free)
+async function fetchTwelve(ticker) {
+  const url = `https://api.twelvedata.com/price?symbol=${ticker}&apikey=demo`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  if (!res.ok) throw new Error("12D "+res.status);
+  const d = await res.json();
+  if (!d.price) throw new Error("12D no data");
+  const price = parseFloat(d.price);
+  return {
+    priceStr: `$${price.toFixed(2)}`, priceNum: price,
+    changePct: null, changeAmt: null, isUp: null,
+    live: true, src: "12Data",
+  };
+}
+
+// Fetch one ticker — races Yahoo vs Twelve Data
+async function fetchOneTicker(ticker) {
+  try { return await fetchYahoo(ticker); } catch(e) {}
+  try { return await fetchTwelve(ticker); } catch(e) {}
+  return null;
+}
+
+// Fetch all tickers in parallel
+async function fetchRealPrices(tickers) {
+  if (!tickers.length) return {};
+  const results = await Promise.allSettled(
+    tickers.map(t => fetchOneTicker(t).then(v => [t, v]))
+  );
+  const out = {};
+  results.forEach(r => {
+    if (r.status === "fulfilled" && r.value?.[1]) {
+      out[r.value[0]] = r.value[1];
+    }
+  });
+  return out;
+}
+
+// Market bar: S&P500, VIX, Brent
 async function fetchMarketData() {
   try {
-    const data = await fetchRealPrices(['^GSPC','^VIX','BZ=F']);
+    const [sp, vx, oil] = await Promise.allSettled([
+      fetchYahoo('^GSPC'), fetchYahoo('^VIX'), fetchYahoo('BZ=F'),
+    ]);
     return {
-      sp500: data['^GSPC']?.priceStr  || null,
-      sp500Up: data['^GSPC']?.isUp,
-      sp500Chg: data['^GSPC']?.changePct,
-      vix:   data['^VIX']?.priceStr   || null,
-      oil:   data['BZ=F']?.priceStr   || null,
+      sp500:    sp.status==="fulfilled"  ? sp.value.priceStr  : null,
+      sp500Up:  sp.status==="fulfilled"  ? sp.value.isUp      : null,
+      sp500Chg: sp.status==="fulfilled"  ? sp.value.changePct : null,
+      vix:      vx.status==="fulfilled"  ? vx.value.priceStr  : null,
+      oil:      oil.status==="fulfilled" ? oil.value.priceStr : null,
     };
   } catch(e) { return {}; }
 }
@@ -1126,12 +1140,16 @@ async function runScan() {
       fetchMarketData(),
     ]);
 
-    // Step 3 — Inject real prices into AI response
+    // Step 3 — Inject real prices (Yahoo/12Data), keep AI price as fallback
     let pricesInjected=0;
     p.stocks=(p.stocks||[]).map(s=>{
       const lp=livePrices[s.ticker];
-      if(lp){pricesInjected++;return{...s,current_price:lp.priceStr,price_change:lp.changePct,price_amt:lp.changeAmt,price_is_up:lp.isUp,price_live:true,day_high:lp.high,day_low:lp.low};}
-      return s;
+      if(lp){
+        pricesInjected++;
+        return{...s,current_price:lp.priceStr,price_change:lp.changePct,price_amt:lp.changeAmt,price_is_up:lp.isUp,price_live:true,price_src:lp.src,day_high:lp.high,day_low:lp.low};
+      }
+      // Fallback: keep AI estimated price — mark as estimated
+      return{...s, price_live:false, price_src:"Estimé"};
     });
     p.prices_live=pricesInjected>0;
 
@@ -1314,7 +1332,7 @@ function renderScan(d) {
         ${[["Cours",s.current_price,"var(--t1)"],["Entrée",s.entry,"var(--blue)"],["Stop",s.stop_loss,"var(--red)"],["TP1",s.tp1,"var(--green)"],["TP2",s.tp2,"#0fa063"]]
           .map(([l,v,c])=>`<div class="pcell"><div class="plbl">${l}</div><div class="pval" style="color:${c}">${v||"–"}</div></div>`).join("")}
         ${s.price_change?`<div class="pcell"><div class="plbl">Var.</div><div class="pval" style="color:${s.price_is_up?"var(--green)":"var(--red)"}">${s.price_change}</div></div>`:""}
-        ${s.price_live?`<div class="pcell" style="background:var(--green-d);border-color:rgba(16,201,122,.2)"><div class="plbl">Prix</div><div class="pval" style="color:var(--green);font-size:9px">LIVE</div></div>`:""}
+        <div class="pcell" style="background:${s.price_live?"var(--green-d)":"var(--amber-d)"};border-color:${s.price_live?"rgba(16,201,122,.2)":"rgba(245,166,35,.2)"}"><div class="plbl">Source</div><div class="pval" style="color:${s.price_live?"var(--green)":"var(--amber)"};font-size:9px">${s.price_src||"Estimé"}</div></div>
       </div>
       <div class="sc-info">
         <div class="info-row">
