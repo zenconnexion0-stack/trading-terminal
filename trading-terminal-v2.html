@@ -253,7 +253,7 @@ const UNIVERSE=["AAPL","NVDA","MSFT","AMZN","META","GOOGL","TSLA","AMD","NFLX","
 const FINNHUB="https://finnhub.io/api/v1",TWELVE="https://api.twelvedata.com",GROQ="https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL="llama-3.3-70b-versatile";
 const $=id=>document.getElementById(id);
-const CANDLE_TTL=6*6e4,NEWS_TTL=30*6e4,FUND_TTL=12*36e5;
+const CANDLE_TTL=30*6e4,NEWS_TTL=30*6e4,FUND_TTL=12*36e5;
 const DD={Prudent:8,"Modéré":15,Agressif:25},TP={Prudent:12,"Modéré":20,Agressif:35};
 
 let S={kFh:"",kTd:"",kGq:"",data:{},candle:{},news:{},earn:{},reco:{},mNews:null,
@@ -328,8 +328,8 @@ function sparkline(closes,up){if(!closes||closes.length<2)return"";const data=cl
 /* ═══ API ═══ */
 const isoD=d=>d.toISOString().slice(0,10);
 async function fhQuote(tk){const r=await fetch(`${FINNHUB}/quote?symbol=${encodeURIComponent(tk)}&token=${S.kFh}`,{signal:AbortSignal.timeout(9000)});if(r.status===429)throw new Error("Finnhub quota (60/min)");if(!r.ok)throw new Error("Finnhub HTTP "+r.status);const j=await r.json();if(j.c===0&&j.pc===0)throw new Error("Ticker inconnu");return{price:j.c,change:j.d,changePct:j.dp,high:j.h,low:j.l,open:j.o,prevClose:j.pc};}
-function tdOk(){const n=Date.now();S.tdCalls=S.tdCalls.filter(t=>n-t<6e4);return S.tdCalls.length<8;}
-async function tdCandles(tk){const c=S.candle[tk];if(c&&Date.now()-c.ts<CANDLE_TTL)return c.v;if(!tdOk())throw new Error("Twelve Data quota (8/min)");S.tdCalls.push(Date.now());const r=await fetch(`${TWELVE}/time_series?symbol=${encodeURIComponent(tk)}&interval=1day&outputsize=120&apikey=${S.kTd}`,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error("Twelve Data HTTP "+r.status);const j=await r.json();if(j.status==="error")throw new Error("Twelve Data: "+(j.message||"err"));if(!j.values||!j.values.length)throw new Error("Pas d'OHLC");const v=j.values.slice().reverse().map(x=>({open:+x.open,high:+x.high,low:+x.low,close:+x.close}));S.candle[tk]={v,ts:Date.now()};return v;}
+async function tdWait(){while(true){const n=Date.now();S.tdCalls=S.tdCalls.filter(t=>n-t<6e4);if(S.tdCalls.length<8){S.tdCalls.push(n);return;}const wait=6e4-(n-S.tdCalls[0])+60;setSbar("Indicateurs: limite 8/min, file d attente...");await sleep(Math.min(wait,8000));}}
+async function tdCandles(tk){const c=S.candle[tk];if(c&&Date.now()-c.ts<CANDLE_TTL)return c.v;await tdWait();const r=await fetch(`${TWELVE}/time_series?symbol=${encodeURIComponent(tk)}&interval=1day&outputsize=120&apikey=${S.kTd}`,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error("Twelve Data HTTP "+r.status);const j=await r.json();if(j.status==="error")throw new Error("Twelve Data: "+(j.message||"err"));if(!j.values||!j.values.length)throw new Error("Pas d'OHLC");const v=j.values.slice().reverse().map(x=>({open:+x.open,high:+x.high,low:+x.low,close:+x.close}));S.candle[tk]={v,ts:Date.now()};return v;}
 async function fhNews(tk){const c=S.news[tk];if(c&&Date.now()-c.ts<NEWS_TTL)return c.v;try{const to=new Date(),from=new Date(Date.now()-7*864e5);const r=await fetch(`${FINNHUB}/company-news?symbol=${tk}&from=${isoD(from)}&to=${isoD(to)}&token=${S.kFh}`,{signal:AbortSignal.timeout(9000)});if(!r.ok)return[];const j=await r.json();const v=(Array.isArray(j)?j:[]).sort((a,b)=>b.datetime-a.datetime).slice(0,5);S.news[tk]={v,ts:Date.now()};return v;}catch(e){return[];}}
 async function fhEarn(tk){const c=S.earn[tk];if(c&&Date.now()-c.ts<FUND_TTL)return c.v;try{const to=new Date(Date.now()+90*864e5);const r=await fetch(`${FINNHUB}/calendar/earnings?from=${isoD(new Date())}&to=${isoD(to)}&symbol=${tk}&token=${S.kFh}`,{signal:AbortSignal.timeout(9000)});if(!r.ok)return null;const j=await r.json();const arr=(j&&j.earningsCalendar)||[];let next=null;arr.forEach(e=>{if(!next||e.date<next.date)next=e;});let out=null;if(next){const dt=new Date(next.date+"T12:00:00");out={date:next.date,daysTo:Math.round((dt-Date.now())/864e5)};}S.earn[tk]={v:out,ts:Date.now()};return out;}catch(e){return null;}}
 async function fhReco(tk){const c=S.reco[tk];if(c&&Date.now()-c.ts<FUND_TTL)return c.v;try{const r=await fetch(`${FINNHUB}/stock/recommendation?symbol=${tk}&token=${S.kFh}`,{signal:AbortSignal.timeout(9000)});if(!r.ok)return null;const j=await r.json();if(!Array.isArray(j)||!j.length)return null;j.sort((a,b)=>(a.period<b.period?1:-1));const x=j[0];const bull=(x.strongBuy||0)+(x.buy||0),bear=(x.sell||0)+(x.strongSell||0),hold=(x.hold||0);let lbl=bull>bear*1.5?"Achat":bear>bull?"Vente":"Neutre";const out={lbl,bull,bear,hold};S.reco[tk]={v:out,ts:Date.now()};return out;}catch(e){return null;}}
@@ -468,8 +468,8 @@ async function genBrief(){if(!S.kGq){S.briefing="Clé Groq requise pour le brief
 function runPortfolioMonitor(){
   if(!S.portfolio.length)return;const pv=portfolioValue();
   S.portfolio.forEach(p=>{const r=buildReco(p,pv);const prev=S.lastReco[p.tk];
-    if(prev&&prev!==r.action&&(r.action==="VENDRE"||r.action==="RÉDUIRE"))notify(p.tk,"Reco passée à "+r.action+" - "+r.reasons[0]);
-    else if(!prev&&r.urg>=3)notify(p.tk,r.action+" - "+r.reasons[0]);
+    if(prev&&prev!==r.action&&(r.action==="VENDRE"||r.action==="RÉDUIRE"))notify(p.tk,"Reco passée à "+r.action+" — "+r.reasons[0]);
+    else if(!prev&&r.urg>=3)notify(p.tk,r.action+" — "+r.reasons[0]);
     const e=S.earn[p.tk]&&S.earn[p.tk].v;if(e&&e.daysTo!=null&&e.daysTo>=0&&e.daysTo<=2&&S.lastReco["e_"+p.tk]!==e.date){notify(p.tk,"Résultats imminents ("+e.daysTo+"j)");S.lastReco["e_"+p.tk]=e.date;}
     S.lastReco[p.tk]=r.action;});
   opportunities().forEach(o=>{if(o.d.sig.score>=78&&!S.lastOpp[o.tk]){notify(o.tk,"Opportunité d'achat (score "+o.d.sig.score+")");S.lastOpp[o.tk]=Date.now();}});
@@ -509,7 +509,7 @@ async function runDiag(){const btn=$("diag-btn"),box=$("diag-out");btn.disabled=
   log("→ Finnhub quote...");try{const q=await fhQuote("AAPL");log("  ✓ AAPL $"+q.price.toFixed(2),"var(--green)");}catch(e){log("  ✗ "+e.message,"var(--red)");}
   log("→ Finnhub news/résultats...");try{const e=await fhEarn("AAPL");log("  ✓ résultats: "+(e?e.date:"n/a"),"var(--green)");}catch(e){log("  ✗ "+e.message,"var(--red)");}
   log("→ Twelve Data...");try{const c=await tdCandles("AAPL");log("  ✓ "+c.length+" bougies","var(--green)");}catch(e){log("  ✗ "+e.message,"var(--red)");}
-  log("→ Groq...");if(!S.kGq)log("  - aucune clé","var(--amber)");else{const r=await groqText("Réponds OK");log(r?"  ✓ "+r.slice(0,16):"  ✗ pas de réponse",r?"var(--green)":"var(--red)");}
+  log("→ Groq...");if(!S.kGq)log("  – aucune clé","var(--amber)");else{const r=await groqText("Réponds OK");log(r?"  ✓ "+r.slice(0,16):"  ✗ pas de réponse",r?"var(--green)":"var(--red)");}
   btn.disabled=false;btn.innerHTML='<i class="ti ti-stethoscope"></i>Diagnostiquer';}
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 function setSbar(m,err){$("sbar").style.display="flex";$("sbar").className="sbar"+(err?" err":"");$("sbar-txt").textContent=m;}
